@@ -1,0 +1,93 @@
+{
+  "manifest_version": "0.3",
+  "name": "keepsake",
+  "display_name": "Keepsake",
+  "version": "1.0.0",
+  "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
+  "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 42 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, write daily journal entries, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "author": {
+    "name": "Nicolas Croce",
+    "url": "https://github.com/nicolascroce"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolascroce/keepsake-mcp.git"
+  },
+  "homepage": "https://keepsake.place",
+  "documentation": "https://github.com/nicolascroce/keepsake-mcp#readme",
+  "support": "https://github.com/nicolascroce/keepsake-mcp/issues",
+  "server": {
+    "type": "node",
+    "entry_point": "build/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/build/index.js"],
+      "env": {
+        "KEEPSAKE_API_KEY": "${user_config.api_key}"
+      }
+    }
+  },
+  "tools": [
+    { "name": "list_contacts", "description": "List all contacts with pagination and sorting" },
+    { "name": "get_contact", "description": "Get a contact by ID with recent interactions" },
+    { "name": "create_contact", "description": "Create a new contact" },
+    { "name": "update_contact", "description": "Update an existing contact" },
+    { "name": "delete_contact", "description": "Delete a contact permanently" },
+    { "name": "search_contacts", "description": "Search contacts by name, email, company" },
+    { "name": "list_companies", "description": "List all companies" },
+    { "name": "get_company", "description": "Get a company by ID" },
+    { "name": "create_company", "description": "Create a new company" },
+    { "name": "update_company", "description": "Update an existing company" },
+    { "name": "delete_company", "description": "Delete a company" },
+    { "name": "search_companies", "description": "Search companies" },
+    { "name": "list_entries", "description": "List interaction entries with filters" },
+    { "name": "create_entry", "description": "Log a new interaction" },
+    { "name": "update_entry", "description": "Update an interaction" },
+    { "name": "delete_entry", "description": "Delete an interaction" },
+    { "name": "list_tasks", "description": "List tasks with status and date filters" },
+    { "name": "create_task", "description": "Create a new task" },
+    { "name": "update_task", "description": "Update a task" },
+    { "name": "delete_task", "description": "Delete a task" },
+    { "name": "complete_task", "description": "Mark a task as completed" },
+    { "name": "uncomplete_task", "description": "Mark a task as pending" },
+    { "name": "snooze_task", "description": "Reschedule a task to a new date" },
+    { "name": "list_notes", "description": "List quick notes" },
+    { "name": "create_note", "description": "Create a quick note" },
+    { "name": "update_note", "description": "Update a quick note" },
+    { "name": "delete_note", "description": "Delete a quick note" },
+    { "name": "pin_note", "description": "Pin a note to top" },
+    { "name": "archive_note", "description": "Archive a note" },
+    { "name": "restore_note", "description": "Restore a deleted/archived note" },
+    { "name": "list_days", "description": "List daily journal summaries" },
+    { "name": "get_day", "description": "Get a specific day's journal" },
+    { "name": "update_day", "description": "Create or update a daily journal" },
+    { "name": "list_tags", "description": "List all tags" },
+    { "name": "get_tag_items", "description": "Get items linked to a tag" },
+    { "name": "link_tag", "description": "Link an entity to a tag" },
+    { "name": "unlink_tag", "description": "Remove a tag link" },
+    { "name": "get_contact_timeline", "description": "Get a contact's full timeline" },
+    { "name": "get_tasks_today", "description": "Get today's tasks including overdue" },
+    { "name": "get_tasks_overdue", "description": "Get overdue tasks" },
+    { "name": "get_changelog", "description": "Get recent changes across all entities" },
+    { "name": "search", "description": "Global search across all entity types" }
+  ],
+  "tools_generated": false,
+  "keywords": ["crm", "contacts", "tasks", "notes", "journal", "relationships", "personal-crm"],
+  "license": "MIT",
+  "privacy_policies": ["https://keepsake.place/privacy"],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "Keepsake API Key",
+      "description": "Your Keepsake API key (starts with ksk_). Get one at https://keepsake.place → Account → API Keys.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

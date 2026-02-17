@@ -1,0 +1,11 @@
+.mcpregistry_github_token
+.mcpregistry_registry_token
+.git
+.gitignore
+src
+tsconfig.json
+*.mcpb
+glama.json
+smithery.yaml
+server.json
+node_modules/typescript
