@@ -4,7 +4,7 @@
   "description": "MCP server for Keepsake personal CRM — connect your AI agent to your contacts, tasks, notes, and more",
   "type": "module",
   "bin": {
-    "keepsake-mcp": "./build/index.js"
+    "keepsake-mcp": "build/index.js"
   },
   "main": "./build/index.js",
   "scripts": {
@@ -25,6 +25,7 @@
     "notes"
   ],
   "license": "MIT",
+  "mcpName": "io.github.nicolascroce/keepsake",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "zod": "^3.24.4"
