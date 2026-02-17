@@ -1,0 +1,19 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - keepsakeApiKey
+    properties:
+      keepsakeApiKey:
+        type: string
+        description: "Your Keepsake API key (starts with ksk_). Get one at https://keepsake.place → Account → API Keys."
+  commandFunction: |-
+    (config) => ({
+      command: "npx",
+      args: ["-y", "keepsake-mcp"],
+      env: {
+        KEEPSAKE_API_KEY: config.keepsakeApiKey
+      }
+    })
