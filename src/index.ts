@@ -131,10 +131,10 @@ server.registerTool(
 server.registerTool(
   "create_contact",
   {
-    description: "Create a new contact. first_name and last_name are required.",
+    description: "Create a new contact. first_name is required. last_name is optional (useful for contacts where you only know the first name).",
     inputSchema: {
       first_name: z.string().describe("First name"),
-      last_name: z.string().describe("Last name"),
+      last_name: z.string().optional().describe("Last name (optional)"),
       email: z.string().optional().describe("Email address"),
       phone: z.string().optional().describe("Phone number"),
       company: z.string().optional().describe("Company name"),
@@ -314,7 +314,7 @@ server.registerTool(
       "List interaction entries (calls, emails, meetings, events, etc.). Supports filtering by type, contact, and date range.",
     inputSchema: {
       type: z
-        .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "other"])
+        .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "log", "other"])
         .optional()
         .describe("Filter by entry type"),
       contact_id: z.string().uuid().optional().describe("Filter by associated contact ID"),
@@ -336,10 +336,10 @@ server.registerTool(
   "create_entry",
   {
     description:
-      "Create a new interaction entry. Content supports #tag# and [[tag]] syntax for automatic tag linking.",
+      "An ENTRY is a dated interaction log tied to contacts. Records something that happened (call, meeting, email…) on a specific date.\n\nCreate a new interaction entry. Content supports #tag# and [[tag]] syntax for automatic tag linking.",
     inputSchema: {
       type: z
-        .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "other"])
+        .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "log", "other"])
         .describe("Entry type"),
       date: z.string().describe("Date (YYYY-MM-DD)"),
       content: z.string().optional().describe("Entry content (supports #tag# and [[tag]])"),
@@ -347,6 +347,10 @@ server.registerTool(
         .array(z.string().uuid())
         .optional()
         .describe("Array of contact UUIDs to associate"),
+      tag_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Array of tag UUIDs to link"),
     },
     annotations: { title: "Create entry", destructiveHint: false, idempotentHint: false, openWorldHint: false },
   },
@@ -362,7 +366,7 @@ server.registerTool(
     inputSchema: {
       id: z.string().uuid().describe("Entry UUID"),
       type: z
-        .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "other"])
+        .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "log", "other"])
         .optional()
         .describe("Entry type"),
       date: z.string().optional().describe("Date (YYYY-MM-DD)"),
@@ -371,6 +375,10 @@ server.registerTool(
         .array(z.string().uuid())
         .optional()
         .describe("Replace associated contacts"),
+      tag_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Replace associated tags"),
     },
     annotations: { title: "Update entry", destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -405,9 +413,9 @@ server.registerTool(
     inputSchema: {
       status: z.enum(["pending", "completed"]).optional().describe("Filter by status"),
       date_type: z
-        .enum(["specific", "week", "month", "quarter", "unspecified"])
+        .enum(["specific", "asap", "one_day"])
         .optional()
-        .describe("Filter by date type"),
+        .describe("Filter by date type: specific (has a due date), asap (do as soon as possible), one_day (someday/no rush)"),
       date: z.string().optional().describe("Filter by specific date (YYYY-MM-DD)"),
       limit: z.number().int().positive().optional().describe("Max results (default 20)"),
       offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
@@ -425,15 +433,15 @@ server.registerTool(
   "create_task",
   {
     description:
-      "Create a new task. Title supports #tag# and [[tag]] for automatic tag linking.",
+      "A TASK is an action item to accomplish. Can have due date, recurrence, priority, linked to contacts and tags.\n\nCreate a new task. Title supports #tag# and [[tag]] for automatic tag linking.",
     inputSchema: {
       title: z.string().describe("Task title (supports #tag# and [[tag]])"),
       description: z.string().optional().describe("Task description"),
       date: z.string().optional().describe("Due date (YYYY-MM-DD)"),
       date_type: z
-        .enum(["specific", "week", "month", "quarter", "unspecified"])
+        .enum(["specific", "asap", "one_day"])
         .optional()
-        .describe("Date type (default: specific)"),
+        .describe("Date type: specific (has a due date, default), asap (do as soon as possible, no date needed), one_day (someday/no rush, no date needed)"),
       priority: z.enum(["low", "medium", "high"]).optional().describe("Priority level"),
       recurrence_type: z
         .enum(["daily", "weekly", "monthly", "yearly"])
@@ -445,7 +453,14 @@ server.registerTool(
         .positive()
         .optional()
         .describe("Recurrence interval (e.g., every N days)"),
-      contact_id: z.string().uuid().optional().describe("Associated contact UUID"),
+      contact_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Array of contact UUIDs to associate"),
+      tag_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Array of tag UUIDs to link"),
     },
     annotations: { title: "Create task", destructiveHint: false, idempotentHint: false, openWorldHint: false },
   },
@@ -464,10 +479,18 @@ server.registerTool(
       description: z.string().optional().describe("Task description"),
       date: z.string().optional().describe("Due date (YYYY-MM-DD)"),
       date_type: z
-        .enum(["specific", "week", "month", "quarter", "unspecified"])
+        .enum(["specific", "asap", "one_day"])
         .optional()
-        .describe("Date type"),
+        .describe("Date type: specific (has a due date), asap (do as soon as possible), one_day (someday/no rush)"),
       priority: z.enum(["low", "medium", "high"]).optional().describe("Priority level"),
+      contact_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Replace associated contacts"),
+      tag_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Replace associated tags"),
     },
     annotations: { title: "Update task", destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -527,9 +550,9 @@ server.registerTool(
       id: z.string().uuid().describe("Task UUID"),
       date: z.string().describe("New date (YYYY-MM-DD)"),
       date_type: z
-        .enum(["specific", "week", "month", "quarter", "unspecified"])
+        .enum(["specific", "asap", "one_day"])
         .optional()
-        .describe("New date type (default: specific)"),
+        .describe("New date type: specific (has a due date, default), asap (do as soon as possible), one_day (someday/no rush)"),
     },
     annotations: { title: "Snooze task", destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -566,7 +589,7 @@ server.registerTool(
   "create_note",
   {
     description:
-      "Create a new quick note. Content supports #tag# and [[tag]] for automatic tag linking.",
+      "A NOTE is a durable text document with no date. Use it for reference material, ideas, checklists, or anything to persist.\n\nCreate a new quick note. Content supports #tag# and [[tag]] for automatic tag linking.",
     inputSchema: {
       content: z.string().describe("Note content (supports #tag# and [[tag]])"),
       is_pinned: z.boolean().optional().describe("Pin the note (default: false)"),
@@ -589,6 +612,14 @@ server.registerTool(
     inputSchema: {
       id: z.string().uuid().describe("Note UUID"),
       content: z.string().optional().describe("Updated content"),
+      contact_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Replace associated contacts"),
+      tag_ids: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Replace associated tags"),
     },
     annotations: { title: "Update note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -773,6 +804,243 @@ server.registerTool(
   },
   async ({ id, ...body }) => {
     return toContent(await fetchApi(`/tags/${id}/unlink`, "POST", body));
+  }
+);
+
+// ===========================================================================
+// CONTACT LINKS (link/unlink contacts to notes, entries, tasks)
+// ===========================================================================
+
+server.registerTool(
+  "link_note_contact",
+  {
+    description: "Link an existing contact to a note.",
+    inputSchema: {
+      note_id: z.string().uuid().describe("Note UUID"),
+      contact_id: z.string().uuid().describe("Contact UUID"),
+    },
+    annotations: { title: "Link note contact", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ note_id, contact_id }) => {
+    return toContent(await fetchApi(`/notes/${note_id}/contacts/${contact_id}`, "POST"));
+  }
+);
+
+server.registerTool(
+  "unlink_note_contact",
+  {
+    description: "Remove the link between a contact and a note.",
+    inputSchema: {
+      note_id: z.string().uuid().describe("Note UUID"),
+      contact_id: z.string().uuid().describe("Contact UUID"),
+    },
+    annotations: { title: "Unlink note contact", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ note_id, contact_id }) => {
+    return toContent(await fetchApi(`/notes/${note_id}/contacts/${contact_id}`, "DELETE"));
+  }
+);
+
+server.registerTool(
+  "link_entry_contact",
+  {
+    description: "Link an existing contact to an entry.",
+    inputSchema: {
+      entry_id: z.string().uuid().describe("Entry UUID"),
+      contact_id: z.string().uuid().describe("Contact UUID"),
+    },
+    annotations: { title: "Link entry contact", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ entry_id, contact_id }) => {
+    return toContent(await fetchApi(`/entries/${entry_id}/contacts/${contact_id}`, "POST"));
+  }
+);
+
+server.registerTool(
+  "unlink_entry_contact",
+  {
+    description: "Remove the link between a contact and an entry.",
+    inputSchema: {
+      entry_id: z.string().uuid().describe("Entry UUID"),
+      contact_id: z.string().uuid().describe("Contact UUID"),
+    },
+    annotations: { title: "Unlink entry contact", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ entry_id, contact_id }) => {
+    return toContent(await fetchApi(`/entries/${entry_id}/contacts/${contact_id}`, "DELETE"));
+  }
+);
+
+server.registerTool(
+  "link_task_contact",
+  {
+    description: "Link an existing contact to a task.",
+    inputSchema: {
+      task_id: z.string().uuid().describe("Task UUID"),
+      contact_id: z.string().uuid().describe("Contact UUID"),
+    },
+    annotations: { title: "Link task contact", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ task_id, contact_id }) => {
+    return toContent(await fetchApi(`/tasks/${task_id}/contacts/${contact_id}`, "POST"));
+  }
+);
+
+server.registerTool(
+  "unlink_task_contact",
+  {
+    description: "Remove the link between a contact and a task.",
+    inputSchema: {
+      task_id: z.string().uuid().describe("Task UUID"),
+      contact_id: z.string().uuid().describe("Contact UUID"),
+    },
+    annotations: { title: "Unlink task contact", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ task_id, contact_id }) => {
+    return toContent(await fetchApi(`/tasks/${task_id}/contacts/${contact_id}`, "DELETE"));
+  }
+);
+
+server.registerTool(
+  "get_tag",
+  {
+    description: "Get a single tag by ID with all its properties (name, description, color, icon, view mode, favorite status).",
+    inputSchema: {
+      id: z.string().uuid().describe("Tag UUID"),
+    },
+    annotations: { title: "Get tag", readOnlyHint: true, openWorldHint: false },
+  },
+  async ({ id }) => {
+    return toContent(await fetchApi(`/tags/${id}`));
+  }
+);
+
+server.registerTool(
+  "create_tag",
+  {
+    description: "A TAG is a thematic grouping space. Syntax: #name# or [[name]]. Groups notes, entries, tasks, and contacts.\n\nCreate a new tag. If a tag with the same name already exists, returns the existing tag.",
+    inputSchema: {
+      name: z.string().describe("Tag name"),
+      description: z.string().optional().describe("Tag description"),
+    },
+    annotations: { title: "Create tag", destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  },
+  async (body) => {
+    return toContent(await fetchApi("/tags", "POST", body));
+  }
+);
+
+server.registerTool(
+  "update_tag",
+  {
+    description: "Update an existing tag. Only send the fields you want to change. Supports name, description, color, icon, view mode, and favorite status.",
+    inputSchema: {
+      id: z.string().uuid().describe("Tag UUID"),
+      name: z.string().optional().describe("Tag name"),
+      description: z.string().optional().describe("Tag description"),
+      color: z.string().optional().describe("Tag color (e.g. 'blue', 'red', 'green')"),
+      icon: z.string().optional().describe("Tag icon (emoji or icon name)"),
+      view_mode: z.string().optional().describe("View mode for the tag page"),
+      is_favorite: z.boolean().optional().describe("Whether the tag is a favorite"),
+    },
+    annotations: { title: "Update tag", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ id, ...body }) => {
+    return toContent(await fetchApi(`/tags/${id}`, "PATCH", body));
+  }
+);
+
+server.registerTool(
+  "delete_tag",
+  {
+    description: "Permanently delete a tag and all its links to contacts, entries, tasks, notes, and companies.",
+    inputSchema: {
+      id: z.string().uuid().describe("Tag UUID"),
+    },
+    annotations: { title: "Delete tag", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ id }) => {
+    return toContent(await fetchApi(`/tags/${id}`, "DELETE"));
+  }
+);
+
+// ===========================================================================
+// TASK HEADERS (Sections)
+// ===========================================================================
+
+server.registerTool(
+  "list_task_headers",
+  {
+    description: "List all task headers (section separators used to group tasks on tag pages and day views).",
+    inputSchema: {
+      limit: z.number().int().positive().optional().describe("Max results (default 50)"),
+      offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
+    },
+    annotations: { title: "List task headers", readOnlyHint: true, openWorldHint: false },
+  },
+  async ({ limit, offset }) => {
+    return toContent(await fetchApi(`/task-headers${qs({ limit, offset })}`));
+  }
+);
+
+server.registerTool(
+  "get_task_header",
+  {
+    description: "Get a single task header by ID.",
+    inputSchema: {
+      id: z.string().uuid().describe("Task header UUID"),
+    },
+    annotations: { title: "Get task header", readOnlyHint: true, openWorldHint: false },
+  },
+  async ({ id }) => {
+    return toContent(await fetchApi(`/task-headers/${id}`));
+  }
+);
+
+server.registerTool(
+  "create_task_header",
+  {
+    description: "Create a new task header (section separator). Add it to a tag's items_order to position it.",
+    inputSchema: {
+      name: z.string().describe("Header name"),
+      description: z.string().optional().describe("Optional description below the header"),
+      collapsed: z.boolean().optional().describe("Whether the section is collapsed (default false)"),
+    },
+    annotations: { title: "Create task header", destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  },
+  async (body) => {
+    return toContent(await fetchApi("/task-headers", "POST", body));
+  }
+);
+
+server.registerTool(
+  "update_task_header",
+  {
+    description: "Update a task header. Only send the fields you want to change.",
+    inputSchema: {
+      id: z.string().uuid().describe("Task header UUID"),
+      name: z.string().optional().describe("Header name"),
+      description: z.string().optional().describe("Description below the header"),
+      collapsed: z.boolean().optional().describe("Whether the section is collapsed"),
+    },
+    annotations: { title: "Update task header", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ id, ...body }) => {
+    return toContent(await fetchApi(`/task-headers/${id}`, "PATCH", body));
+  }
+);
+
+server.registerTool(
+  "delete_task_header",
+  {
+    description: "Permanently delete a task header.",
+    inputSchema: {
+      id: z.string().uuid().describe("Task header UUID"),
+    },
+    annotations: { title: "Delete task header", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  async ({ id }) => {
+    return toContent(await fetchApi(`/task-headers/${id}`, "DELETE"));
   }
 );
 

@@ -66,7 +66,7 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available tools (42)
+## Available tools (51)
 
 ### Contacts
 | Tool | Description |
@@ -132,9 +132,22 @@ Add to `.cursor/mcp.json` in your project:
 | Tool | Description |
 |------|-------------|
 | `list_tags` | List all tags |
+| `get_tag` | Get a tag by ID with all properties (color, icon, view mode, etc.) |
+| `create_tag` | Create a new tag |
+| `update_tag` | Update a tag (name, description, color, icon, view mode, favorite) |
+| `delete_tag` | Permanently delete a tag and all its links |
 | `get_tag_items` | Get everything linked to a tag |
 | `link_tag` | Link any entity to a tag |
 | `unlink_tag` | Remove a tag link |
+
+### Task Headers (Sections)
+| Tool | Description |
+|------|-------------|
+| `list_task_headers` | List all task headers (section separators) |
+| `get_task_header` | Get a task header by ID |
+| `create_task_header` | Create a task header (section) |
+| `update_task_header` | Update a task header (name, description, collapsed) |
+| `delete_task_header` | Permanently delete a task header |
 
 ### Utilities
 | Tool | Description |
@@ -151,6 +164,14 @@ All tools include MCP safety annotations:
 - **Create tools**: marked `destructiveHint: false`
 - **Update tools**: marked `destructiveHint: false, idempotentHint: true`
 - **Delete tools**: marked `destructiveHint: true, idempotentHint: true`
+
+## Activity tracking
+
+Every write operation (create, update, delete) performed through the API is recorded in an **Activity Feed** visible to the user inside Keepsake. Each action shows the entity type, a content preview, and which API key was used.
+
+This means your user can see everything you do. Be transparent and precise. If you make a mistake, let the user know so they can verify in the activity feed.
+
+Call `get_agent_instructions` at the start of each session for the full best practices guide.
 
 ## Environment variables
 
