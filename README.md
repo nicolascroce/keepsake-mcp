@@ -66,6 +66,10 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/nicolascroce-keepsake-mcp).
+
 ## Available tools (51)
 
 ### Contacts
