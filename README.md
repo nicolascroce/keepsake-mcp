@@ -20,9 +20,43 @@ Your AI assistant becomes a personal relationship manager. Ask it to:
 
 Sign up at [keepsake.place](https://keepsake.place), then go to **Account > API Keys** to generate one.
 
-### 2. Configure your MCP client
+### 2. Choose your connection method
 
-#### Claude Desktop
+#### Option A: Remote (HTTP) — recommended
+
+No installation required. Works with Claude iOS, Claude web, Claude Desktop Connectors, and any MCP client that supports Streamable HTTP.
+
+**Endpoint:** `https://app.keepsake.place/api/mcp`
+
+**Authentication:** Pass your API key as a Bearer token in the `Authorization` header.
+
+**Claude Desktop (Connectors):**
+
+Add a remote MCP server in Claude Desktop settings with:
+- URL: `https://app.keepsake.place/api/mcp`
+- Authentication: Bearer token with your `ksk_` API key
+
+**Any MCP client (Streamable HTTP):**
+
+```json
+{
+  "mcpServers": {
+    "keepsake": {
+      "type": "streamable-http",
+      "url": "https://app.keepsake.place/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ksk_YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+#### Option B: Local (stdio)
+
+Runs locally via `npx`. Useful for Claude Code, Cursor, and local development.
+
+**Claude Desktop:**
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
@@ -40,7 +74,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
-#### Claude Code
+**Claude Code:**
 
 ```bash
 claude mcp add keepsake -- npx -y keepsake-mcp
@@ -48,7 +82,7 @@ claude mcp add keepsake -- npx -y keepsake-mcp
 
 Then set `KEEPSAKE_API_KEY` in your environment.
 
-#### Cursor
+**Cursor:**
 
 Add to `.cursor/mcp.json` in your project:
 
@@ -66,7 +100,7 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available tools (51)
+## Available tools (58)
 
 ### Contacts
 | Tool | Description |
@@ -110,7 +144,7 @@ Add to `.cursor/mcp.json` in your project:
 | `get_tasks_today` | Today's tasks: overdue + due today + ASAP |
 | `get_tasks_overdue` | Only overdue tasks |
 
-### Quick Notes
+### QuickNotes
 | Tool | Description |
 |------|-------------|
 | `list_notes` | List notes (filter by pinned/archived) |
@@ -148,6 +182,16 @@ Add to `.cursor/mcp.json` in your project:
 | `create_task_header` | Create a task header (section) |
 | `update_task_header` | Update a task header (name, description, collapsed) |
 | `delete_task_header` | Permanently delete a task header |
+
+### Contact Links
+| Tool | Description |
+|------|-------------|
+| `link_note_contact` | Link a contact to a note |
+| `unlink_note_contact` | Remove a contact link from a note |
+| `link_entry_contact` | Link a contact to an entry |
+| `unlink_entry_contact` | Remove a contact link from an entry |
+| `link_task_contact` | Link a contact to a task |
+| `unlink_task_contact` | Remove a contact link from a task |
 
 ### Utilities
 | Tool | Description |
