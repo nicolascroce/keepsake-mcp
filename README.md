@@ -100,7 +100,7 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available tools (58)
+## Available tools (62)
 
 ### Contacts
 | Tool | Description |
@@ -192,6 +192,10 @@ Add to `.cursor/mcp.json` in your project:
 | `unlink_entry_contact` | Remove a contact link from an entry |
 | `link_task_contact` | Link a contact to a task |
 | `unlink_task_contact` | Remove a contact link from a task |
+| `link_task_note` | Link a note to a task (non-destructive, the note survives) |
+| `unlink_task_note` | Remove a note link from a task |
+| `link_notes` | Link two notes together (symmetric, non-destructive) |
+| `unlink_notes` | Remove the manual link between two notes |
 
 ### Utilities
 | Tool | Description |

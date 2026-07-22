@@ -1004,6 +1004,69 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     }
   );
 
+  server.registerTool(
+    "link_task_note",
+    {
+      description:
+        "Link an existing note to a task (non-destructive, N-N). The note stays in the inbox/notes list and the task keeps a live link back to it — use this instead of deleting a note after creating a task from it. The note shows its linked tasks; the task shows the source note.",
+      inputSchema: {
+        task_id: z.string().uuid().describe("Task UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Link task note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ task_id, note_id }) => {
+      return toContent(await fetchApi(`/tasks/${task_id}/notes/${note_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_task_note",
+    {
+      description: "Remove the link between a note and a task. Both the task and the note survive.",
+      inputSchema: {
+        task_id: z.string().uuid().describe("Task UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Unlink task note", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ task_id, note_id }) => {
+      return toContent(await fetchApi(`/tasks/${task_id}/notes/${note_id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_notes",
+    {
+      description:
+        "Link two notes together (knowledge base, N-N, non-destructive). The link is symmetric: both notes list each other in their linked-notes section. Use this to connect related ideas — e.g. a note that made you think of another one. Notes can also be linked inline by writing [label](note:uuid) in a note's content.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("First note UUID"),
+        target_note_id: z.string().uuid().describe("Second note UUID"),
+      },
+      annotations: { title: "Link notes", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ note_id, target_note_id }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/links/${target_note_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_notes",
+    {
+      description:
+        "Remove the manual link between two notes (both notes survive). Links derived from inline [label](note:uuid) markdown in a note's content are preserved — edit the content to remove those.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("First note UUID"),
+        target_note_id: z.string().uuid().describe("Second note UUID"),
+      },
+      annotations: { title: "Unlink notes", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ note_id, target_note_id }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/links/${target_note_id}`, "DELETE"));
+    }
+  );
+
   // ===========================================================================
   // CONTACT TIMELINE
   // ===========================================================================
