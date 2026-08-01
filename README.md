@@ -165,12 +165,12 @@ Add to `.cursor/mcp.json` in your project:
 ### Tags
 | Tool | Description |
 |------|-------------|
-| `list_tags` | List all tags |
-| `get_tag` | Get a tag by ID with all properties (color, icon, view mode, etc.) |
+| `list_tags` | List tags (lightweight — ordering arrays omitted), with optional name search (`q`) |
+| `get_tag` | Get a tag by ID with all properties, including `tasks_order` (section markers `h:<header_id>`) |
 | `create_tag` | Create a new tag |
 | `update_tag` | Update a tag (name, description, color, icon, view mode, favorite) |
 | `delete_tag` | Permanently delete a tag and all its links |
-| `get_tag_items` | Get everything linked to a tag |
+| `get_tag_items` | Get items linked to a tag — filter by `types`/`status`, `summary` mode, task `sections` included |
 | `link_tag` | Link any entity to a tag |
 | `unlink_tag` | Remove a tag link |
 

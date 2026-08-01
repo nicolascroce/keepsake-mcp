@@ -704,22 +704,25 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "list_tags",
     {
-      description: "List all tags. Tags organize contacts, entries, tasks, notes, and companies.",
+      description:
+        "List tags (lightweight: the manual tasks_order arrays are omitted — use get_tag for a tag's full ordering). Tags organize contacts, entries, tasks, notes, and companies. Use q to find a tag by name.",
       inputSchema: {
+        q: z.string().optional().describe("Filter by name (case-insensitive substring match)"),
         limit: z.number().int().positive().optional().describe("Max results (default 50)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List tags", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ limit, offset }) => {
-      return toContent(await fetchApi(`/tags${qs({ limit, offset })}`));
+    async ({ q, limit, offset }) => {
+      return toContent(await fetchApi(`/tags${qs({ q, limit, offset })}`));
     }
   );
 
   server.registerTool(
     "get_tag",
     {
-      description: "Get a single tag by ID with all its properties (name, description, color, icon, view mode, favorite status).",
+      description:
+        "Get a single tag by ID with all its properties (name, description, color, icon, view mode, favorite status). Includes tasks_order, the manual ordering of the tag page's task list, where entries of the form \"h:<header_id>\" are section separators (see list_task_headers).",
       inputSchema: {
         id: z.string().uuid().describe("Tag UUID"),
       },
@@ -734,14 +737,23 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "get_tag_items",
     {
       description:
-        "Get all items linked to a specific tag: contacts, entries, tasks, notes, and companies with counts.",
+        "Get items linked to a tag. By default returns every type in full — on large tags that can be a huge response, so prefer types/status/summary to narrow it (e.g. types=['tasks'], status='pending', summary=true to review a project's open tasks). When tasks are included, the response also contains `sections`: the tag page's task sections with their task_ids (header_id null = tasks outside any section).",
       inputSchema: {
         id: z.string().uuid().describe("Tag UUID"),
+        types: z
+          .array(z.enum(["contacts", "entries", "tasks", "notes", "companies"]))
+          .optional()
+          .describe("Only fetch these item types (default: all)"),
+        status: z.enum(["pending", "completed"]).optional().describe("Filter tasks by status"),
+        summary: z
+          .boolean()
+          .optional()
+          .describe("Return lightweight items (ids, titles, excerpts) instead of full rows — recommended unless full content is needed"),
       },
       annotations: { title: "Get tag items", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ id }) => {
-      return toContent(await fetchApi(`/tags/${id}/items`));
+    async ({ id, types, status, summary }) => {
+      return toContent(await fetchApi(`/tags/${id}/items${qs({ types: types?.join(","), status, summary })}`));
     }
   );
 

@@ -3,3 +3,4 @@ build/
 .mcpregistry_github_token
 .mcpregistry_registry_token
 *.mcpb
+.DS_Store
