@@ -546,6 +546,21 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   );
 
   server.registerTool(
+    "get_note",
+    {
+      description:
+        "Get a single note by ID, including its tags, linked contacts, linked tasks and linked notes. Use this when the user points you at one specific note (e.g. gives you its URL — the UUID is the last path segment) instead of listing everything.",
+      inputSchema: {
+        id: z.string().uuid().describe("Note UUID (last segment of the note URL)"),
+      },
+      annotations: { title: "Get note", readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ id }) => {
+      return toContent(await fetchApi(`/notes/${id}`));
+    }
+  );
+
+  server.registerTool(
     "create_note",
     {
       description:

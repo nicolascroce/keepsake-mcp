@@ -100,7 +100,7 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available tools (62)
+## Available tools (63)
 
 ### Contacts
 | Tool | Description |
@@ -148,6 +148,7 @@ Add to `.cursor/mcp.json` in your project:
 | Tool | Description |
 |------|-------------|
 | `list_notes` | List notes (filter by pinned/archived) |
+| `get_note` | Get one note by ID with its tags, contacts, tasks and linked notes |
 | `create_note` | Create a note — supports `#tag#` and `[[tag]]` syntax |
 | `update_note` | Update note content |
 | `delete_note` | Soft-delete (or permanent) |

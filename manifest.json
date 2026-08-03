@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
-  "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 61 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, write daily journal entries, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 63 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, write daily journal entries, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
     "name": "Nicolas Croce",
     "url": "https://github.com/nicolascroce"
@@ -52,6 +52,7 @@
     { "name": "uncomplete_task", "description": "Mark a task as pending" },
     { "name": "snooze_task", "description": "Reschedule a task to a new date" },
     { "name": "list_notes", "description": "List quick notes" },
+    { "name": "get_note", "description": "Get a note by ID with its tags, contacts, tasks and linked notes" },
     { "name": "create_note", "description": "Create a quick note" },
     { "name": "update_note", "description": "Update a quick note" },
     { "name": "delete_note", "description": "Delete a quick note" },
@@ -88,7 +89,8 @@
     { "name": "get_tasks_today", "description": "Get today's tasks including overdue" },
     { "name": "get_tasks_overdue", "description": "Get overdue tasks" },
     { "name": "get_changelog", "description": "Get recent changes across all entities" },
-    { "name": "search", "description": "Global search across all entity types" }
+    { "name": "search", "description": "Global search across all entity types" },
+    { "name": "get_agent_instructions", "description": "Get best practices for being an effective Keepsake agent" }
   ],
   "tools_generated": false,
   "keywords": ["crm", "contacts", "tasks", "notes", "journal", "relationships", "personal-crm"],

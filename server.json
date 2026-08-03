@@ -6,12 +6,12 @@
     "url": "https://github.com/nicolascroce/keepsake-mcp",
     "source": "github"
   },
-  "version": "1.5.0",
+  "version": "1.6.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "keepsake-mcp",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "transport": {
         "type": "stdio"
       },
