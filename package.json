@@ -1,7 +1,7 @@
 {
   "name": "keepsake-mcp",
-  "version": "1.6.0",
-  "description": "MCP server for Keepsake personal CRM — connect your AI agent to your contacts, tasks, notes, and more",
+  "version": "1.7.0",
+  "description": "MCP server for Keepsake personal CRM \u2014 connect your AI agent to your contacts, tasks, notes, and more",
   "type": "module",
   "bin": {
     "keepsake-mcp": "build/index.js"

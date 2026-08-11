@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
   "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 63 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, write daily journal entries, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
@@ -21,83 +21,304 @@
     "entry_point": "build/index.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/build/index.js"],
+      "args": [
+        "${__dirname}/build/index.js"
+      ],
       "env": {
         "KEEPSAKE_API_KEY": "${user_config.api_key}"
       }
     }
   },
   "tools": [
-    { "name": "list_contacts", "description": "List all contacts with pagination and sorting" },
-    { "name": "get_contact", "description": "Get a contact by ID with recent interactions" },
-    { "name": "create_contact", "description": "Create a new contact" },
-    { "name": "update_contact", "description": "Update an existing contact" },
-    { "name": "delete_contact", "description": "Delete a contact permanently" },
-    { "name": "search_contacts", "description": "Search contacts by name, email, company" },
-    { "name": "list_companies", "description": "List all companies" },
-    { "name": "get_company", "description": "Get a company by ID" },
-    { "name": "create_company", "description": "Create a new company" },
-    { "name": "update_company", "description": "Update an existing company" },
-    { "name": "delete_company", "description": "Delete a company" },
-    { "name": "search_companies", "description": "Search companies" },
-    { "name": "list_entries", "description": "List interaction entries with filters" },
-    { "name": "create_entry", "description": "Log a new interaction" },
-    { "name": "update_entry", "description": "Update an interaction" },
-    { "name": "delete_entry", "description": "Delete an interaction" },
-    { "name": "list_tasks", "description": "List tasks with status and date filters" },
-    { "name": "create_task", "description": "Create a new task" },
-    { "name": "update_task", "description": "Update a task" },
-    { "name": "delete_task", "description": "Delete a task" },
-    { "name": "complete_task", "description": "Mark a task as completed" },
-    { "name": "uncomplete_task", "description": "Mark a task as pending" },
-    { "name": "snooze_task", "description": "Reschedule a task to a new date" },
-    { "name": "list_notes", "description": "List quick notes" },
-    { "name": "get_note", "description": "Get a note by ID with its tags, contacts, tasks and linked notes" },
-    { "name": "create_note", "description": "Create a quick note" },
-    { "name": "update_note", "description": "Update a quick note" },
-    { "name": "delete_note", "description": "Delete a quick note" },
-    { "name": "pin_note", "description": "Pin a note to top" },
-    { "name": "archive_note", "description": "Archive a note" },
-    { "name": "restore_note", "description": "Restore a deleted/archived note" },
-    { "name": "list_days", "description": "List daily journal summaries" },
-    { "name": "get_day", "description": "Get a specific day's journal" },
-    { "name": "update_day", "description": "Create or update a daily journal" },
-    { "name": "list_tags", "description": "List all tags" },
-    { "name": "get_tag", "description": "Get a tag by ID with all properties" },
-    { "name": "create_tag", "description": "Create a new tag" },
-    { "name": "update_tag", "description": "Update a tag (name, color, icon, etc.)" },
-    { "name": "delete_tag", "description": "Delete a tag permanently" },
-    { "name": "get_tag_items", "description": "Get items linked to a tag" },
-    { "name": "link_tag", "description": "Link an entity to a tag" },
-    { "name": "unlink_tag", "description": "Remove a tag link" },
-    { "name": "link_note_contact", "description": "Link a contact to a note" },
-    { "name": "unlink_note_contact", "description": "Remove a contact link from a note" },
-    { "name": "link_entry_contact", "description": "Link a contact to an entry" },
-    { "name": "unlink_entry_contact", "description": "Remove a contact link from an entry" },
-    { "name": "link_task_contact", "description": "Link a contact to a task" },
-    { "name": "unlink_task_contact", "description": "Remove a contact link from a task" },
-    { "name": "link_task_note", "description": "Link a note to a task (non-destructive)" },
-    { "name": "unlink_task_note", "description": "Remove a note link from a task" },
-    { "name": "link_notes", "description": "Link two notes together (symmetric, non-destructive)" },
-    { "name": "unlink_notes", "description": "Remove the manual link between two notes" },
-    { "name": "list_task_headers", "description": "List all task headers (sections)" },
-    { "name": "get_task_header", "description": "Get a task header by ID" },
-    { "name": "create_task_header", "description": "Create a task header (section)" },
-    { "name": "update_task_header", "description": "Update a task header" },
-    { "name": "delete_task_header", "description": "Delete a task header" },
-    { "name": "get_contact_timeline", "description": "Get a contact's full timeline" },
-    { "name": "get_tasks_today", "description": "Get today's tasks including overdue" },
-    { "name": "get_tasks_overdue", "description": "Get overdue tasks" },
-    { "name": "get_changelog", "description": "Get recent changes across all entities" },
-    { "name": "search", "description": "Global search across all entity types" },
-    { "name": "get_agent_instructions", "description": "Get best practices for being an effective Keepsake agent" }
+    {
+      "name": "list_contacts",
+      "description": "List all contacts with pagination and sorting"
+    },
+    {
+      "name": "get_contact",
+      "description": "Get a contact by ID with recent interactions"
+    },
+    {
+      "name": "create_contact",
+      "description": "Create a new contact"
+    },
+    {
+      "name": "update_contact",
+      "description": "Update an existing contact"
+    },
+    {
+      "name": "delete_contact",
+      "description": "Delete a contact permanently"
+    },
+    {
+      "name": "search_contacts",
+      "description": "Search contacts by name, email, company"
+    },
+    {
+      "name": "list_companies",
+      "description": "List all companies"
+    },
+    {
+      "name": "get_company",
+      "description": "Get a company by ID"
+    },
+    {
+      "name": "create_company",
+      "description": "Create a new company"
+    },
+    {
+      "name": "update_company",
+      "description": "Update an existing company"
+    },
+    {
+      "name": "delete_company",
+      "description": "Delete a company"
+    },
+    {
+      "name": "search_companies",
+      "description": "Search companies"
+    },
+    {
+      "name": "list_entries",
+      "description": "List interaction entries with filters"
+    },
+    {
+      "name": "create_entry",
+      "description": "Log a new interaction"
+    },
+    {
+      "name": "update_entry",
+      "description": "Update an interaction"
+    },
+    {
+      "name": "delete_entry",
+      "description": "Delete an interaction"
+    },
+    {
+      "name": "list_tasks",
+      "description": "List tasks with status and date filters"
+    },
+    {
+      "name": "create_task",
+      "description": "Create a new task"
+    },
+    {
+      "name": "update_task",
+      "description": "Update a task"
+    },
+    {
+      "name": "delete_task",
+      "description": "Delete a task"
+    },
+    {
+      "name": "complete_task",
+      "description": "Mark a task as completed"
+    },
+    {
+      "name": "uncomplete_task",
+      "description": "Mark a task as pending"
+    },
+    {
+      "name": "snooze_task",
+      "description": "Reschedule a task to a new date"
+    },
+    {
+      "name": "list_notes",
+      "description": "List quick notes"
+    },
+    {
+      "name": "get_note",
+      "description": "Get a note by ID with its tags, contacts, tasks and linked notes"
+    },
+    {
+      "name": "create_note",
+      "description": "Create a quick note"
+    },
+    {
+      "name": "update_note",
+      "description": "Update a quick note"
+    },
+    {
+      "name": "delete_note",
+      "description": "Delete a quick note"
+    },
+    {
+      "name": "pin_note",
+      "description": "Pin a note to top"
+    },
+    {
+      "name": "archive_note",
+      "description": "Archive a note"
+    },
+    {
+      "name": "restore_note",
+      "description": "Restore a deleted/archived note"
+    },
+    {
+      "name": "list_days",
+      "description": "List daily journal summaries"
+    },
+    {
+      "name": "get_day",
+      "description": "Get a specific day's journal"
+    },
+    {
+      "name": "update_day",
+      "description": "Create or update a daily journal"
+    },
+    {
+      "name": "list_tags",
+      "description": "List all tags"
+    },
+    {
+      "name": "get_tag",
+      "description": "Get a tag by ID with all properties"
+    },
+    {
+      "name": "create_tag",
+      "description": "Create a new tag"
+    },
+    {
+      "name": "update_tag",
+      "description": "Update a tag (name, color, icon, etc.)"
+    },
+    {
+      "name": "delete_tag",
+      "description": "Delete a tag permanently"
+    },
+    {
+      "name": "get_tag_items",
+      "description": "Get items linked to a tag"
+    },
+    {
+      "name": "link_tag",
+      "description": "Link an entity to a tag"
+    },
+    {
+      "name": "unlink_tag",
+      "description": "Remove a tag link"
+    },
+    {
+      "name": "link_note_contact",
+      "description": "Link a contact to a note"
+    },
+    {
+      "name": "unlink_note_contact",
+      "description": "Remove a contact link from a note"
+    },
+    {
+      "name": "link_entry_contact",
+      "description": "Link a contact to an entry"
+    },
+    {
+      "name": "unlink_entry_contact",
+      "description": "Remove a contact link from an entry"
+    },
+    {
+      "name": "link_task_contact",
+      "description": "Link a contact to a task"
+    },
+    {
+      "name": "unlink_task_contact",
+      "description": "Remove a contact link from a task"
+    },
+    {
+      "name": "link_task_note",
+      "description": "Link a note to a task (non-destructive)"
+    },
+    {
+      "name": "unlink_task_note",
+      "description": "Remove a note link from a task"
+    },
+    {
+      "name": "link_notes",
+      "description": "Link two notes together (symmetric, non-destructive)"
+    },
+    {
+      "name": "unlink_notes",
+      "description": "Remove the manual link between two notes"
+    },
+    {
+      "name": "list_task_headers",
+      "description": "List all task headers (sections)"
+    },
+    {
+      "name": "get_task_header",
+      "description": "Get a task header by ID"
+    },
+    {
+      "name": "create_task_header",
+      "description": "Create a task header (section)"
+    },
+    {
+      "name": "update_task_header",
+      "description": "Update a task header"
+    },
+    {
+      "name": "delete_task_header",
+      "description": "Delete a task header"
+    },
+    {
+      "name": "get_contact_timeline",
+      "description": "Get a contact's full timeline"
+    },
+    {
+      "name": "get_tasks_today",
+      "description": "Get today's tasks including overdue"
+    },
+    {
+      "name": "get_tasks_overdue",
+      "description": "Get overdue tasks"
+    },
+    {
+      "name": "get_changelog",
+      "description": "Get recent changes across all entities"
+    },
+    {
+      "name": "search",
+      "description": "Global search across all entity types"
+    },
+    {
+      "name": "get_agent_instructions",
+      "description": "Get best practices for being an effective Keepsake agent"
+    },
+    {
+      "name": "list_note_comments",
+      "description": "List the marginalia attached to a note"
+    },
+    {
+      "name": "create_note_comment",
+      "description": "Attach a marginalia to a note passage or to the whole note"
+    },
+    {
+      "name": "update_note_comment",
+      "description": "Edit a marginalia, or set it aside / bring it back"
+    },
+    {
+      "name": "delete_note_comment",
+      "description": "Permanently delete a marginalia"
+    }
   ],
   "tools_generated": false,
-  "keywords": ["crm", "contacts", "tasks", "notes", "journal", "relationships", "personal-crm"],
+  "keywords": [
+    "crm",
+    "contacts",
+    "tasks",
+    "notes",
+    "journal",
+    "relationships",
+    "personal-crm"
+  ],
   "license": "MIT",
-  "privacy_policies": ["https://keepsake.place/privacy"],
+  "privacy_policies": [
+    "https://keepsake.place/privacy"
+  ],
   "compatibility": {
-    "platforms": ["darwin", "win32", "linux"],
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
     "runtimes": {
       "node": ">=18.0.0"
     }

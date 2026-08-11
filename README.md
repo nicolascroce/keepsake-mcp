@@ -100,7 +100,7 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available tools (63)
+## Available tools (67)
 
 ### Contacts
 | Tool | Description |
@@ -155,6 +155,17 @@ Add to `.cursor/mcp.json` in your project:
 | `pin_note` | Pin to top |
 | `archive_note` | Archive a note |
 | `restore_note` | Restore a deleted/archived note |
+
+### Note comments (marginalia)
+
+Material kept *alongside* a note without entering its text — an idea, a reference, an excerpt pasted to rewrite a passage later. Anchored to a passage by quoting it, or to the whole note. Never published, and temporary by design: anything worth keeping becomes a note or a linked task.
+
+| Tool | Description |
+|------|-------------|
+| `list_note_comments` | List the marginalia attached to a note |
+| `create_note_comment` | Attach a marginalia to a passage (pass `quote`) or to the whole note |
+| `update_note_comment` | Edit the content of a marginalia |
+| `delete_note_comment` | Permanently delete a marginalia |
 
 ### Daily Journal
 | Tool | Description |

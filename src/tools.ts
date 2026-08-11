@@ -1202,6 +1202,93 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   );
 
   // ---------------------------------------------------------------------------
+  // Note comments (marginalia)
+  // ---------------------------------------------------------------------------
+
+  server.registerTool(
+    "list_note_comments",
+    {
+      description:
+        "List the marginalia attached to a note. A marginalia is working material the user keeps ALONGSIDE a note without it entering the text: an idea, a reference, a link, an excerpt pasted to rewrite a passage later. They are never published, and they are meant to be TEMPORARY — anything worth keeping becomes a note or a linked task.\n\nEach one is either attached to a specific passage (`quote` is set) or to the whole note (`quote` is null).",
+      inputSchema: {
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "List note comments", readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ note_id }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/comments`));
+    }
+  );
+
+  server.registerTool(
+    "create_note_comment",
+    {
+      description:
+        "Attach a marginalia to a note — material that must stay OUT of the note text.\n\nTo attach it to a passage, pass `quote` with that passage copied VERBATIM from the note content; the server locates it and stores the surrounding context so the comment survives later edits. Omit `quote` to comment on the note as a whole. If the quote is not found verbatim the call is refused rather than attached to the wrong place.\n\nDo not use this to suggest edits to the text — use update_note for that. And keep the number of comments low: a note peppered with them is a note the user abandons.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("Note UUID"),
+        body: z.string().describe("The material itself (markdown, any length)"),
+        quote: z
+          .string()
+          .optional()
+          .describe("Passage to attach to, copied verbatim from the note content. Omit for a note-wide comment."),
+      },
+      annotations: {
+        title: "Create note comment",
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
+    async ({ note_id, ...params }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/comments`, "POST", params));
+    }
+  );
+
+  server.registerTool(
+    "update_note_comment",
+    {
+      description:
+        "Edit the content of a marginalia. There is no intermediate state: a marginalia exists, or it is deleted. A remark that should outlive the note's revision becomes a note or a linked task instead.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("Note UUID"),
+        comment_id: z.string().uuid().describe("Comment UUID"),
+        body: z.string().describe("New content (markdown)"),
+      },
+      annotations: {
+        title: "Update note comment",
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ note_id, comment_id, ...params }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/comments/${comment_id}`, "PATCH", params));
+    }
+  );
+
+  server.registerTool(
+    "delete_note_comment",
+    {
+      description:
+        "Delete a marginalia. Marginalia are temporary by design, so this is the normal way to retire one — there is no recoverable middle state.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("Note UUID"),
+        comment_id: z.string().uuid().describe("Comment UUID"),
+      },
+      annotations: {
+        title: "Delete note comment",
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ note_id, comment_id }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/comments/${comment_id}`, "DELETE"));
+    }
+  );
+
+  // ---------------------------------------------------------------------------
   // Agent instructions
   // ---------------------------------------------------------------------------
 
