@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.7.0",
+  "version": "1.9.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
-  "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 63 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, write daily journal entries, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 67 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, write daily journal entries, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
     "name": "Nicolas Croce",
     "url": "https://github.com/nicolascroce"
@@ -167,6 +167,22 @@
       "description": "Create or update a daily journal"
     },
     {
+      "name": "list_day_blocks",
+      "description": "List a day's time blocks in timeline order"
+    },
+    {
+      "name": "create_day_block",
+      "description": "Create a time block, auto-placed first-fit"
+    },
+    {
+      "name": "update_day_block",
+      "description": "Update a time block"
+    },
+    {
+      "name": "delete_day_block",
+      "description": "Delete a time block and prune its timeline ref"
+    },
+    {
       "name": "list_tags",
       "description": "List all tags"
     },
@@ -300,6 +316,15 @@
     }
   ],
   "tools_generated": false,
+  "prompts": [
+    {
+      "name": "review_note",
+      "description": "Read one of your notes and leave editorial remarks in its margin — form, substance, and what to cut.",
+      "arguments": ["note_id"],
+      "text": "Act as the editor of this Keepsake note. Read it closely, check the marginalia already attached, then judge form and substance: what is weak or generic, where the argument contradicts itself, which sentence carries the real idea. Ask who the text is written for. Leave three or four substantive remarks in the margin, each anchored to its passage — never rewrite the note itself."
+    }
+  ],
+  "prompts_generated": false,
   "keywords": [
     "crm",
     "contacts",

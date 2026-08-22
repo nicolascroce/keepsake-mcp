@@ -100,7 +100,21 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available tools (67)
+## Server instructions
+
+On connection, the server sends MCP `instructions` — injected into the client's system
+prompt. It is the only channel that reaches an agent *before* it goes looking for a
+capability, so it stays short and points at the rest: call `get_agent_instructions` for
+the full doctrine, and put editorial remarks in a note's margin (`create_note_comment`)
+rather than in the chat, which disappears.
+
+## Prompts (1)
+
+| Prompt | Arguments | Description |
+|--------|-----------|-------------|
+| `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
+
+## Available tools (71)
 
 ### Contacts
 | Tool | Description |
@@ -173,6 +187,14 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `list_days` | List journal entries by date range |
 | `get_day` | Get a specific day's journal |
 | `update_day` | Create or update a day's journal (upsert) |
+
+### Day blocks (Day-view timeline)
+| Tool | Description |
+|------|-------------|
+| `list_day_blocks` | List a day's time blocks, in timeline order |
+| `create_day_block` | Create a block, auto-placed first-fit (or pinned via anchor_time) |
+| `update_day_block` | Update a block (title, duration, anchor, note, done) |
+| `delete_day_block` | Delete a block and prune its timeline ref |
 
 ### Tags
 | Tool | Description |

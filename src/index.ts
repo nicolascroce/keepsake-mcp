@@ -2,7 +2,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerAllTools } from "./tools.js";
+import { registerAllTools, registerAllPrompts, SERVER_INSTRUCTIONS } from "./tools.js";
 import type { FetchApiFn, ApiResult } from "./tools.js";
 
 // ---------------------------------------------------------------------------
@@ -54,12 +54,16 @@ const fetchApi: FetchApiFn = async (
 // MCP Server (stdio)
 // ---------------------------------------------------------------------------
 
-const server = new McpServer({
-  name: "keepsake",
-  version: "1.0.0",
-});
+const server = new McpServer(
+  {
+    name: "keepsake",
+    version: "1.0.0",
+  },
+  { instructions: SERVER_INSTRUCTIONS }
+);
 
 registerAllTools(server, fetchApi);
+registerAllPrompts(server);
 
 async function main() {
   const transport = new StdioServerTransport();
