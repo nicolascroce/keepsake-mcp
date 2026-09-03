@@ -785,7 +785,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "list_days",
     {
-      description: "List daily journal summaries. Filter by date range.",
+      description: "List days with their intention or question of the day (field `note`). Filter by date range.",
       inputSchema: {
         from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
         to: z.string().optional().describe("End date (YYYY-MM-DD)"),
@@ -802,7 +802,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "get_day",
     {
-      description: "Get a specific day's journal summary by date.",
+      description: "Get a specific day by date, including its intention or question of the day (field `note`).",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
       },
@@ -817,10 +817,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "update_day",
     {
       description:
-        "Create or update a daily journal summary. If a day entry already exists for this date, it will be updated (upsert).",
+        "Create or update a day's intention or question of the day (upsert on the date). The `note` field is the intention or question of the day — one short line at the top of the Today view (a mantra, an intention, a single priority, or a question to keep in mind). Not a journal: never write a summary of the day here.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
-        note: z.string().describe("Journal content for the day"),
+        note: z.string().describe("The intention or question of the day: one short line (mantra, intention, single priority, or a question to keep in mind). Not a journal summary."),
       },
       annotations: { title: "Update day", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },

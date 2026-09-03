@@ -2,7 +2,7 @@
 
 MCP server for [Keepsake](https://keepsake.place) — the personal CRM that helps you nurture your relationships.
 
-Connect your AI assistant (Claude, Cursor, or any MCP-compatible client) to your Keepsake data: contacts, interactions, tasks, notes, daily journal, companies, and tags.
+Connect your AI assistant (Claude, Cursor, or any MCP-compatible client) to your Keepsake data: contacts, interactions, tasks, notes, daily intentions, companies, and tags.
 
 ## Why
 
@@ -181,12 +181,12 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `update_note_comment` | Edit the content of a marginalia |
 | `delete_note_comment` | Permanently delete a marginalia |
 
-### Daily Journal
+### Days (intention or question of the day)
 | Tool | Description |
 |------|-------------|
-| `list_days` | List journal entries by date range |
-| `get_day` | Get a specific day's journal |
-| `update_day` | Create or update a day's journal (upsert) |
+| `list_days` | List days with their intention or question of the day, by date range |
+| `get_day` | Get a day and its intention or question (field `note`) |
+| `update_day` | Set a day's intention or question — one short line, not a journal (upsert) |
 
 ### Day blocks (Day-view timeline)
 | Tool | Description |
