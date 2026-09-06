@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
   "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 67 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
@@ -253,6 +253,14 @@
     {
       "name": "unlink_notes",
       "description": "Remove the manual link between two notes"
+    },
+    {
+      "name": "link_note_date",
+      "description": "Attach a note to a calendar day (it surfaces in that day's view)"
+    },
+    {
+      "name": "unlink_note_date",
+      "description": "Remove a note from a calendar day (the note survives)"
     },
     {
       "name": "list_task_headers",

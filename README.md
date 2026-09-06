@@ -114,7 +114,7 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (71)
+## Available tools (73)
 
 ### Contacts
 | Tool | Description |
@@ -230,6 +230,8 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `unlink_task_note` | Remove a note link from a task |
 | `link_notes` | Link two notes together (symmetric, non-destructive) |
 | `unlink_notes` | Remove the manual link between two notes |
+| `link_note_date` | Attach a note to a calendar day (it surfaces in that day's view) |
+| `unlink_note_date` | Remove a note from a calendar day (the note survives) |
 
 ### Utilities
 | Tool | Description |
