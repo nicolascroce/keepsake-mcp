@@ -114,17 +114,17 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (73)
+## Available tools (76)
 
 ### Contacts
 | Tool | Description |
 |------|-------------|
-| `list_contacts` | List all contacts with pagination and sorting |
+| `list_contacts` | List contacts with pagination, sorting, field selection and filters (linked company, has_company, updated_since) |
 | `get_contact` | Get a contact with recent interactions, tags, and stats |
-| `create_contact` | Create a new contact |
+| `create_contact` | Create a new contact (`company` links it to a company record, created if missing) |
 | `update_contact` | Update contact fields |
 | `delete_contact` | Permanently delete a contact |
-| `search_contacts` | Accent-insensitive search by name, email, company |
+| `search_contacts` | Accent-insensitive search by name, email, notes, phone and linked company names |
 | `get_contact_timeline` | Unified chronological feed of all items for a contact |
 
 ### Companies
@@ -136,6 +136,9 @@ rather than in the chat, which disappears.
 | `update_company` | Update company fields |
 | `delete_company` | Soft-delete (or permanent delete) a company |
 | `search_companies` | Accent-insensitive company search |
+| `link_contact_company` | Link a contact to a company (optional role) |
+| `unlink_contact_company` | Remove a contact–company link |
+| `merge_companies` | Merge a duplicate company into another (contacts, entries, tags, details, notes) |
 
 ### Entries (Interactions)
 | Tool | Description |

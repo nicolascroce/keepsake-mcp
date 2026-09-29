@@ -148,18 +148,29 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_contacts",
     {
       description:
-        "List all contacts in the user's Keepsake CRM. Supports pagination, sorting, and optional last_interaction_date enrichment.",
+        "List contacts in the user's Keepsake CRM. Supports pagination, sorting, field selection (use `fields` to skip long notes when scanning many contacts), filters on linked companies and on last update, and optional last_interaction_date enrichment. Each contact's companies are company records, returned in `companies`.",
       inputSchema: {
-        limit: z.number().int().positive().optional().describe("Max results (default 20)"),
+        limit: z.number().int().positive().optional().describe("Max results (default 20, max 100)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
-        sort: z.string().optional().describe("Sort field: last_name, first_name, created_at"),
+        sort: z.string().optional().describe("Sort field: last_name, first_name, created_at, updated_at"),
         order: z.enum(["asc", "desc"]).optional().describe("Sort order"),
         include_last_interaction: z.boolean().optional().describe("Include last_interaction_date for each contact (default: false)"),
+        fields: z
+          .array(z.string())
+          .optional()
+          .describe("Only return these fields (id is always included). Columns: first_name, last_name, email, phone, job_title, address, birth_day, birth_month, birth_year, notes, created_at, updated_at. Computed: companies, last_interaction_date. Omit for everything."),
+        company: z.string().optional().describe("Only contacts linked to this company: a company UUID, or part of its name (case and accents ignored)"),
+        has_company: z.boolean().optional().describe("true: only contacts linked to at least one company; false: only contacts without any company"),
+        updated_since: z.string().optional().describe("Only contacts updated after this ISO date or timestamp"),
       },
       annotations: { title: "List contacts", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ limit, offset, sort, order, include_last_interaction }) => {
-      return toContent(await fetchApi(`/contacts${qs({ limit, offset, sort, order, include_last_interaction })}`));
+    async ({ limit, offset, sort, order, include_last_interaction, fields, company, has_company, updated_since }) => {
+      return toContent(
+        await fetchApi(
+          `/contacts${qs({ limit, offset, sort, order, include_last_interaction, fields: fields?.join(","), company, has_company, updated_since })}`
+        )
+      );
     }
   );
 
@@ -188,7 +199,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         last_name: z.string().optional().describe("Last name (optional)"),
         email: z.string().optional().describe("Email address"),
         phone: z.string().optional().describe("Phone number"),
-        company: z.string().optional().describe("Company name"),
+        company: z.string().optional().describe("Company name. Links the contact to that company record (matched by name ignoring case and accents, created if missing). Adds a link, never removes one. The contact's companies are returned in `companies`."),
         birthday: z.string().optional().describe("Birthday as ISO date string (YYYY-MM-DD), e.g. '1980-02-14'"),
         notes: z.string().optional().describe("Notes about the contact"),
       },
@@ -209,7 +220,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         last_name: z.string().optional().describe("Last name"),
         email: z.string().optional().describe("Email address"),
         phone: z.string().optional().describe("Phone number"),
-        company: z.string().optional().describe("Company name"),
+        company: z.string().optional().describe("Company name. Links the contact to that company record (matched by name ignoring case and accents, created if missing). Adds a link, never removes one. The contact's companies are returned in `companies`."),
         birthday: z.string().nullable().optional().describe("Birthday as ISO date string (YYYY-MM-DD), e.g. '1980-02-14'. Set to null to clear."),
         notes: z.string().optional().describe("Notes about the contact"),
       },
@@ -338,6 +349,54 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     async ({ id, permanent }) => {
       const query = permanent ? "?permanent=true" : "";
       return toContent(await fetchApi(`/companies/${id}${query}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_contact_company",
+    {
+      description:
+        "Link a contact to a company record (idempotent: linking twice keeps one link). A contact can belong to several companies. Optionally set the contact's role there. Shortcut when you only know the company's name: create_contact / update_contact with `company`.",
+      inputSchema: {
+        company_id: z.string().uuid().describe("Company UUID"),
+        contact_id: z.string().uuid().describe("Contact UUID"),
+        role: z.string().optional().describe("Role or job at this company (e.g. 'Training advisor')"),
+      },
+      annotations: { title: "Link contact to company", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ company_id, contact_id, role }) => {
+      return toContent(await fetchApi(`/companies/${company_id}/contacts`, "POST", { contact_id, ...(role !== undefined && { role }) }));
+    }
+  );
+
+  server.registerTool(
+    "unlink_contact_company",
+    {
+      description: "Remove the link between a contact and a company. Neither the contact nor the company is deleted.",
+      inputSchema: {
+        company_id: z.string().uuid().describe("Company UUID"),
+        contact_id: z.string().uuid().describe("Contact UUID"),
+      },
+      annotations: { title: "Unlink contact from company", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ company_id, contact_id }) => {
+      return toContent(await fetchApi(`/companies/${company_id}/contacts${qs({ contact_id })}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "merge_companies",
+    {
+      description:
+        "Merge a duplicate company INTO another one: its contacts, entries and tags move to the target (no duplicates), the target's empty details (website, email, phone, address) are filled from it, its notes are appended to the target's, then it is deleted. Use it when two records describe the same organization (e.g. 'CNCP' and 'Cncp'). Confirm with your user which record to keep.",
+      inputSchema: {
+        source_id: z.string().uuid().describe("UUID of the company to merge away (it will be deleted)"),
+        target_id: z.string().uuid().describe("UUID of the company to keep"),
+      },
+      annotations: { title: "Merge companies", destructiveHint: true, idempotentHint: false, openWorldHint: false },
+    },
+    async ({ source_id, target_id }) => {
+      return toContent(await fetchApi(`/companies/${source_id}/merge`, "POST", { target_id }));
     }
   );
 
