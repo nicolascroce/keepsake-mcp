@@ -430,6 +430,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .optional()
           .describe("Filter by entry type"),
         contact_id: z.string().uuid().optional().describe("Filter by associated contact ID"),
+        company_id: z.string().uuid().optional().describe("Only entries where this company is a participant"),
         from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
         to: z.string().optional().describe("End date (YYYY-MM-DD)"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
@@ -437,9 +438,9 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
       },
       annotations: { title: "List entries", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ type, contact_id, from, to, limit, offset }) => {
+    async ({ type, contact_id, company_id, from, to, limit, offset }) => {
       return toContent(
-        await fetchApi(`/entries${qs({ type, contact_id, from, to, limit, offset })}`)
+        await fetchApi(`/entries${qs({ type, contact_id, company_id, from, to, limit, offset })}`)
       );
     }
   );
@@ -459,6 +460,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Array of contact UUIDs to associate"),
+        company_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Array of company UUIDs to associate (companies are separate from contacts)"),
         tag_ids: z
           .array(z.string().uuid())
           .optional()
@@ -487,6 +492,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Replace associated contacts"),
+        company_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Replace associated companies (send [] to unlink all). Contacts are unaffected."),
         tag_ids: z
           .array(z.string().uuid())
           .optional()
@@ -529,15 +538,31 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .optional()
           .describe("Filter by date type: specific (has a due date), asap (do as soon as possible), one_day (someday/no rush)"),
         date: z.string().optional().describe("Filter by specific date (YYYY-MM-DD)"),
+        company_id: z.string().uuid().optional().describe("Only tasks linked directly to this company"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List tasks", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ status, date_type, date, limit, offset }) => {
+    async ({ status, date_type, date, company_id, limit, offset }) => {
       return toContent(
-        await fetchApi(`/tasks${qs({ status, date_type, date, limit, offset })}`)
+        await fetchApi(`/tasks${qs({ status, date_type, date, company_id, limit, offset })}`)
       );
+    }
+  );
+
+  server.registerTool(
+    "get_task",
+    {
+      description:
+        "Get a single task by ID, with its tags, linked contacts (contact_ids), linked companies (company_ids) and linked notes (note_ids). Use it when you already know which task you need instead of listing everything.",
+      inputSchema: {
+        id: z.string().uuid().describe("Task UUID"),
+      },
+      annotations: { title: "Get task", readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ id }) => {
+      return toContent(await fetchApi(`/tasks/${id}`));
     }
   );
 
@@ -581,6 +606,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Array of contact UUIDs to associate"),
+        company_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Array of company UUIDs to associate (companies are separate from contacts)"),
         tag_ids: z
           .array(z.string().uuid())
           .optional()
@@ -625,6 +654,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Replace associated contacts"),
+        company_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Replace associated companies (send [] to unlink all). Contacts are unaffected."),
         tag_ids: z
           .array(z.string().uuid())
           .optional()
@@ -714,14 +747,15 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         date: z.string().optional().describe("Only notes linked to this day (YYYY-MM-DD)"),
         date_from: z.string().optional().describe("Only notes linked to a day on or after this date (YYYY-MM-DD)"),
         date_to: z.string().optional().describe("Only notes linked to a day on or before this date (YYYY-MM-DD)"),
+        company_id: z.string().uuid().optional().describe("Only notes linked directly to this company"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List notes", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ pinned, archived, date, date_from, date_to, limit, offset }) => {
+    async ({ pinned, archived, date, date_from, date_to, company_id, limit, offset }) => {
       return toContent(
-        await fetchApi(`/notes${qs({ pinned, archived, date, date_from, date_to, limit, offset })}`)
+        await fetchApi(`/notes${qs({ pinned, archived, date, date_from, date_to, company_id, limit, offset })}`)
       );
     }
   );
@@ -753,6 +787,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Array of contact UUIDs to associate"),
+        company_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Array of company UUIDs to associate (companies are separate from contacts)"),
         dates: z
           .array(z.string())
           .optional()
@@ -776,6 +814,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Replace associated contacts"),
+        company_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Replace associated companies (send [] to unlink all). Contacts are unaffected."),
         tag_ids: z
           .array(z.string().uuid())
           .optional()
@@ -1315,6 +1357,96 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     },
     async ({ task_id, contact_id }) => {
       return toContent(await fetchApi(`/tasks/${task_id}/contacts/${contact_id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_entry_company",
+    {
+      description: "Link a company to an entry (the company becomes a participant of that interaction). Idempotent. Companies are separate records from contacts: use this (or company_ids) for an organization, link_entry_contact for a person.",
+      inputSchema: {
+        entry_id: z.string().uuid().describe("Entry UUID"),
+        company_id: z.string().uuid().describe("Company UUID"),
+      },
+      annotations: { title: "Link entry company", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ entry_id, company_id }) => {
+      return toContent(await fetchApi(`/entries/${entry_id}/companies/${company_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_entry_company",
+    {
+      description: "Remove the link between a company and an entry.",
+      inputSchema: {
+        entry_id: z.string().uuid().describe("Entry UUID"),
+        company_id: z.string().uuid().describe("Company UUID"),
+      },
+      annotations: { title: "Unlink entry company", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ entry_id, company_id }) => {
+      return toContent(await fetchApi(`/entries/${entry_id}/companies/${company_id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_task_company",
+    {
+      description: "Link a company to a task. Idempotent. Companies are separate records from contacts: use this (or company_ids) for an organization, link_task_contact for a person.",
+      inputSchema: {
+        task_id: z.string().uuid().describe("Task UUID"),
+        company_id: z.string().uuid().describe("Company UUID"),
+      },
+      annotations: { title: "Link task company", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ task_id, company_id }) => {
+      return toContent(await fetchApi(`/tasks/${task_id}/companies/${company_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_task_company",
+    {
+      description: "Remove the link between a company and a task.",
+      inputSchema: {
+        task_id: z.string().uuid().describe("Task UUID"),
+        company_id: z.string().uuid().describe("Company UUID"),
+      },
+      annotations: { title: "Unlink task company", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ task_id, company_id }) => {
+      return toContent(await fetchApi(`/tasks/${task_id}/companies/${company_id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_note_company",
+    {
+      description: "Link a company to a note. Idempotent. Companies are separate records from contacts: use this (or company_ids) for an organization, link_note_contact for a person.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("Note UUID"),
+        company_id: z.string().uuid().describe("Company UUID"),
+      },
+      annotations: { title: "Link note company", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ note_id, company_id }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/companies/${company_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_note_company",
+    {
+      description: "Remove the link between a company and a note.",
+      inputSchema: {
+        note_id: z.string().uuid().describe("Note UUID"),
+        company_id: z.string().uuid().describe("Company UUID"),
+      },
+      annotations: { title: "Unlink note company", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ note_id, company_id }) => {
+      return toContent(await fetchApi(`/notes/${note_id}/companies/${company_id}`, "DELETE"));
     }
   );
 

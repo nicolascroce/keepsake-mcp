@@ -114,7 +114,7 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (76)
+## Available tools (83)
 
 ### Contacts
 | Tool | Description |
@@ -152,6 +152,7 @@ rather than in the chat, which disappears.
 | Tool | Description |
 |------|-------------|
 | `list_tasks` | List tasks with status/date filters |
+| `get_task` | Get a task with its tags, contacts, companies and linked notes |
 | `create_task` | Create a task — supports `#tag#` and `[[tag]]` syntax |
 | `update_task` | Update task fields |
 | `delete_task` | Delete a task |
@@ -220,13 +221,16 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `update_task_header` | Update a task header (name, description, collapsed) |
 | `delete_task_header` | Permanently delete a task header |
 
-### Contact Links
+### Contact & company links
 | Tool | Description |
 |------|-------------|
+| `link_note_company` / `unlink_note_company` | Link / unlink a company to a note |
 | `link_note_contact` | Link a contact to a note |
 | `unlink_note_contact` | Remove a contact link from a note |
+| `link_entry_company` / `unlink_entry_company` | Add / remove a company as participant of an entry |
 | `link_entry_contact` | Link a contact to an entry |
 | `unlink_entry_contact` | Remove a contact link from an entry |
+| `link_task_company` / `unlink_task_company` | Link / unlink a company to a task |
 | `link_task_contact` | Link a contact to a task |
 | `unlink_task_contact` | Remove a contact link from a task |
 | `link_task_note` | Link a note to a task (non-destructive, the note survives) |

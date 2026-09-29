@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
   "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 67 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
@@ -109,6 +109,10 @@
     {
       "name": "list_tasks",
       "description": "List tasks with status and date filters"
+    },
+    {
+      "name": "get_task",
+      "description": "Get a task with its links"
     },
     {
       "name": "create_task",
@@ -235,6 +239,14 @@
       "description": "Remove a contact link from a note"
     },
     {
+      "name": "link_note_company",
+      "description": "Link a company to a note"
+    },
+    {
+      "name": "unlink_note_company",
+      "description": "Unlink a company from a note"
+    },
+    {
       "name": "link_entry_contact",
       "description": "Link a contact to an entry"
     },
@@ -243,12 +255,28 @@
       "description": "Remove a contact link from an entry"
     },
     {
+      "name": "link_entry_company",
+      "description": "Link a company to an entry"
+    },
+    {
+      "name": "unlink_entry_company",
+      "description": "Unlink a company from an entry"
+    },
+    {
       "name": "link_task_contact",
       "description": "Link a contact to a task"
     },
     {
       "name": "unlink_task_contact",
       "description": "Remove a contact link from a task"
+    },
+    {
+      "name": "link_task_company",
+      "description": "Link a company to a task"
+    },
+    {
+      "name": "unlink_task_company",
+      "description": "Unlink a company from a task"
     },
     {
       "name": "link_task_note",
