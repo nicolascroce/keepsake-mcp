@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
   "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 67 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
@@ -92,7 +92,7 @@
     },
     {
       "name": "list_entries",
-      "description": "List interaction entries with filters"
+      "description": "List interaction entries with filters (type, contact, company, page, dates)"
     },
     {
       "name": "create_entry",
@@ -108,7 +108,7 @@
     },
     {
       "name": "list_tasks",
-      "description": "List tasks with status and date filters"
+      "description": "List tasks with status, date, company and page filters"
     },
     {
       "name": "get_task",
@@ -140,7 +140,7 @@
     },
     {
       "name": "list_notes",
-      "description": "List quick notes"
+      "description": "List notes (pinned, archived, day, company or page)"
     },
     {
       "name": "get_note",
@@ -160,7 +160,7 @@
     },
     {
       "name": "pin_note",
-      "description": "Pin a note to top"
+      "description": "Pin a note as a post-it (short reference always at hand)"
     },
     {
       "name": "archive_note",
@@ -212,7 +212,7 @@
     },
     {
       "name": "update_tag",
-      "description": "Update a tag (name, color, icon, etc.)"
+      "description": "Update a tag (name, color, icon, favorite, order of tasks and sections)"
     },
     {
       "name": "delete_tag",
@@ -312,7 +312,7 @@
     },
     {
       "name": "create_task_header",
-      "description": "Create a task header (section)"
+      "description": "Create a task header (section) — place it with update_tag tasks_order"
     },
     {
       "name": "update_task_header",

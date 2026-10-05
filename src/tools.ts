@@ -423,7 +423,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_entries",
     {
       description:
-        "List interaction entries (calls, emails, meetings, events, etc.). Supports filtering by type, contact, and date range.",
+        "List interaction entries (calls, emails, meetings, events, etc.). Supports filtering by type, contact, company, tag (page) and date range.",
       inputSchema: {
         type: z
           .enum(["call", "email", "meeting", "event", "gift", "letter", "message", "log", "other"])
@@ -431,6 +431,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .describe("Filter by entry type"),
         contact_id: z.string().uuid().optional().describe("Filter by associated contact ID"),
         company_id: z.string().uuid().optional().describe("Only entries where this company is a participant"),
+        tag_id: z.string().uuid().optional().describe("Only entries linked to this tag (page)"),
         from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
         to: z.string().optional().describe("End date (YYYY-MM-DD)"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
@@ -438,9 +439,9 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
       },
       annotations: { title: "List entries", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ type, contact_id, company_id, from, to, limit, offset }) => {
+    async ({ type, contact_id, company_id, tag_id, from, to, limit, offset }) => {
       return toContent(
-        await fetchApi(`/entries${qs({ type, contact_id, company_id, from, to, limit, offset })}`)
+        await fetchApi(`/entries${qs({ type, contact_id, company_id, tag_id, from, to, limit, offset })}`)
       );
     }
   );
@@ -530,7 +531,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_tasks",
     {
       description:
-        "List tasks. Filter by status (pending/completed), date_type, or specific date.",
+        "List tasks. Filter by status (pending/completed), date_type, specific date, company, or tag (page) — e.g. tag_id + status=pending lists a project's open tasks.",
       inputSchema: {
         status: z.enum(["pending", "completed"]).optional().describe("Filter by status"),
         date_type: z
@@ -539,14 +540,15 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .describe("Filter by date type: specific (has a due date), asap (do as soon as possible), one_day (someday/no rush)"),
         date: z.string().optional().describe("Filter by specific date (YYYY-MM-DD)"),
         company_id: z.string().uuid().optional().describe("Only tasks linked directly to this company"),
+        tag_id: z.string().uuid().optional().describe("Only tasks linked to this tag (page)"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List tasks", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ status, date_type, date, company_id, limit, offset }) => {
+    async ({ status, date_type, date, company_id, tag_id, limit, offset }) => {
       return toContent(
-        await fetchApi(`/tasks${qs({ status, date_type, date, company_id, limit, offset })}`)
+        await fetchApi(`/tasks${qs({ status, date_type, date, company_id, tag_id, limit, offset })}`)
       );
     }
   );
@@ -740,7 +742,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_notes",
     {
       description:
-        "List notes. QuickNotes (inbox, not yet archived) and Notes (archived, permanent). Filter by pinned or archived status, or by the day(s) a note is linked to (`date`, or `date_from`/`date_to`) — e.g. \"what did I note for tomorrow?\". Each note carries `dates`, the days it is linked to.",
+        "List notes. QuickNotes (inbox, not yet archived) and Notes (archived, permanent). Filter by pinned or archived status, by tag (page) with `tag_id`, or by the day(s) a note is linked to (`date`, or `date_from`/`date_to`) — e.g. \"what did I note for tomorrow?\". Each note carries `dates`, the days it is linked to.",
       inputSchema: {
         pinned: z.boolean().optional().describe("Filter pinned notes only"),
         archived: z.boolean().optional().describe("Filter by status: true = Notes (archived/permanent), false = QuickNotes (inbox)"),
@@ -748,14 +750,15 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         date_from: z.string().optional().describe("Only notes linked to a day on or after this date (YYYY-MM-DD)"),
         date_to: z.string().optional().describe("Only notes linked to a day on or before this date (YYYY-MM-DD)"),
         company_id: z.string().uuid().optional().describe("Only notes linked directly to this company"),
+        tag_id: z.string().uuid().optional().describe("Only notes linked to this tag (page)"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List notes", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ pinned, archived, date, date_from, date_to, company_id, limit, offset }) => {
+    async ({ pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset }) => {
       return toContent(
-        await fetchApi(`/notes${qs({ pinned, archived, date, date_from, date_to, company_id, limit, offset })}`)
+        await fetchApi(`/notes${qs({ pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset })}`)
       );
     }
   );
@@ -853,7 +856,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "pin_note",
     {
-      description: "Pin a QuickNote or Note so it appears at the top of the Inbox.",
+      description: "Pin a QuickNote or Note so it stays in view. A pin is a POST-IT: a short reference the user wants always at hand (gate code, hotel room number, Wi-Fi password). Do not pin a note just because it is important — meeting prep is linked to its day, project material to a tag, actions become tasks. Pin only when the user asks or the note is clearly such a post-it.",
       inputSchema: {
         id: z.string().uuid().describe("Note UUID"),
       },
@@ -1119,14 +1122,17 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "update_tag",
     {
-      description: "Update an existing tag. Only send the fields you want to change. Supports name, description, color, icon, view mode, and favorite status.",
+      description: "Update an existing tag. Only send the fields you want to change. Supports name, description, color, icon, favorite status, and the order of the page's tasks and sections (tasks_order).",
       inputSchema: {
         id: z.string().uuid().describe("Tag UUID"),
         name: z.string().optional().describe("Tag name"),
         description: z.string().optional().describe("Tag description"),
         color: z.string().optional().describe("Tag color (e.g. 'blue', 'red', 'green')"),
         icon: z.string().optional().describe("Tag icon (emoji or icon name)"),
-        view_mode: z.string().optional().describe("View mode for the tag page"),
+        tasks_order: z
+          .array(z.string())
+          .optional()
+          .describe("Full display order of the page's tasks: task ids and \"h:<header_id>\" entries for sections, top to bottom. Read the current one with get_tag, insert or move entries, send the whole array back. Tasks listed after a section belong to it."),
         is_favorite: z.boolean().optional().describe("Whether the tag is a favorite"),
       },
       annotations: { title: "Update tag", destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -1222,7 +1228,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "create_task_header",
     {
-      description: "Create a new task header (section separator). Add it to a tag's items_order to position it.",
+      description: "Create a new task header (section separator). To show it on a tag page, insert \"h:<header_id>\" into that tag's tasks_order (get_tag, then update_tag) where the section should start: the tasks listed after it belong to that section.",
       inputSchema: {
         name: z.string().describe("Header name"),
         description: z.string().optional().describe("Optional description below the header"),

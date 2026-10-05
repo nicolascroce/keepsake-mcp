@@ -143,7 +143,7 @@ rather than in the chat, which disappears.
 ### Entries (Interactions)
 | Tool | Description |
 |------|-------------|
-| `list_entries` | List interactions (calls, emails, meetings, etc.) |
+| `list_entries` | List interactions (calls, emails, meetings, etc.) — filter by type, contact, company, page (`tag_id`), dates |
 | `create_entry` | Log a new interaction — supports `#tag#` and `[[tag]]` syntax |
 | `update_entry` | Update an interaction |
 | `delete_entry` | Delete an interaction |
@@ -151,7 +151,7 @@ rather than in the chat, which disappears.
 ### Tasks
 | Tool | Description |
 |------|-------------|
-| `list_tasks` | List tasks with status/date filters |
+| `list_tasks` | List tasks — filter by status, date, company, page (`tag_id`) |
 | `get_task` | Get a task with its tags, contacts, companies and linked notes |
 | `create_task` | Create a task — supports `#tag#` and `[[tag]]` syntax |
 | `update_task` | Update task fields |
@@ -165,12 +165,12 @@ rather than in the chat, which disappears.
 ### QuickNotes
 | Tool | Description |
 |------|-------------|
-| `list_notes` | List notes (filter by pinned/archived) |
+| `list_notes` | List notes — filter by pinned/archived, day, company, page (`tag_id`) |
 | `get_note` | Get one note by ID with its tags, contacts, tasks and linked notes |
 | `create_note` | Create a note — supports `#tag#` and `[[tag]]` syntax |
 | `update_note` | Update note content |
 | `delete_note` | Soft-delete (or permanent) |
-| `pin_note` | Pin to top |
+| `pin_note` | Pin as a post-it (short reference always at hand) |
 | `archive_note` | Archive a note |
 | `restore_note` | Restore a deleted/archived note |
 
@@ -206,7 +206,7 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `list_tags` | List tags (lightweight — ordering arrays omitted), with optional name search (`q`) |
 | `get_tag` | Get a tag by ID with all properties, including `tasks_order` (section markers `h:<header_id>`) |
 | `create_tag` | Create a new tag |
-| `update_tag` | Update a tag (name, description, color, icon, view mode, favorite) |
+| `update_tag` | Update a tag (name, description, color, icon, favorite, order of tasks and sections via `tasks_order`) |
 | `delete_tag` | Permanently delete a tag and all its links |
 | `get_tag_items` | Get items linked to a tag — filter by `types`/`status`, `summary` mode, task `sections` included |
 | `link_tag` | Link any entity to a tag |
@@ -217,7 +217,7 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 |------|-------------|
 | `list_task_headers` | List all task headers (section separators) |
 | `get_task_header` | Get a task header by ID |
-| `create_task_header` | Create a task header (section) |
+| `create_task_header` | Create a task header (section) — insert `h:<id>` in the tag's `tasks_order` to place it |
 | `update_task_header` | Update a task header (name, description, collapsed) |
 | `delete_task_header` | Permanently delete a task header |
 
