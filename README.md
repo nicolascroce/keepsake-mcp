@@ -188,9 +188,9 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 ### Days (intention or question of the day)
 | Tool | Description |
 |------|-------------|
-| `list_days` | List days with their intention or question of the day, by date range |
-| `get_day` | Get a day and its intention or question (field `note`) |
-| `update_day` | Set a day's intention or question — one short line, not a journal (upsert) |
+| `list_days` | List days with their intention or question of the day (the one in force, which stays until changed), by date range |
+| `get_day` | Get a day, its intention in force (`intention`, carried over until changed) and what was written that day (`note`) |
+| `update_day` | Set a day's intention or question — one short line, not a journal (upsert); it stays in place on the following days until changed |
 
 ### Day blocks (Day-view timeline)
 | Tool | Description |
