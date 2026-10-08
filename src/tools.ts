@@ -906,7 +906,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "list_days",
     {
-      description: "List stored days with their intention or question of the day. An intention stays in place until changed: `intention` is the one in force that day (the last one written on that day or before, `intention_date` = when it was written); `note` is what was written on that exact day (null = nothing written). Filter by date range.",
+      description: "List stored days with their intention or question of the day (`note`; `intention` repeats it, null when empty). An intention is valid for its own day only — it does not carry over to the following days. Filter by date range.",
       inputSchema: {
         from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
         to: z.string().optional().describe("End date (YYYY-MM-DD)"),
@@ -923,7 +923,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "get_day",
     {
-      description: "Get a specific day by date: its intention or question of the day AND the notes linked to that day (field `notes`, via link_note_date / `dates`). An intention stays in place until changed: `intention` is the one in force that day, as the user sees it (the last one written on that day or before; `intention_date` = the day it was written), while `note` is what was written on that exact day (null = nothing written there, '' = intention stopped from that day). Always 200 — `exists: false` means no row is stored for that date; `intention` and the linked notes are returned regardless.",
+      description: "Get a specific day by date: its intention or question of the day AND the notes linked to that day (field `notes`, via link_note_date / `dates`). `note` is the intention written for that day (null or '' = none; `intention` repeats it). An intention is valid for its own day only — it does not carry over. Always 200 — `exists: false` means no row is stored for that date; `intention` and the linked notes are returned regardless.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
       },
@@ -938,10 +938,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "update_day",
     {
       description:
-        "Create or update a day's intention or question of the day (upsert on the date). The `note` field is the intention or question of the day — one short line at the top of the Today view (a mantra, an intention, a single priority, or a question to keep in mind). Not a journal: never write a summary of the day here.\n\nAn intention stays in place until changed: writing it on a day replaces the intention from that day onward (following days show it too, until the next day with its own intention — set one on a future date for a one-off, e.g. before a meeting). `null` removes what was written on that day (the day goes back to the intention in force before it); an empty string stops any intention from that day onward. Check `intention` with get_day before writing: you may be replacing a long-running intention the user cares about.\n\nNOT for attaching a note to a day: this field is a single line and you would overwrite the user's intention. To put a note on a day, use create_note with `dates` or link_note_date.",
+        "Create or update a day's intention or question of the day (upsert on the date). The `note` field is the intention or question of the day — one short line at the top of the Today view (a mantra, an intention, a single priority, or a question to keep in mind). Not a journal: never write a summary of the day here.\n\nAn intention is valid for its own day only: it does not carry over to the following days. The user types it by hand each morning, on purpose — do not set it for them unless they ask. `null` or an empty string removes it.\n\nNOT for attaching a note to a day: this field is a single line and you would overwrite the user's intention. To put a note on a day, use create_note with `dates` or link_note_date.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
-        note: z.string().nullable().describe("The intention or question of the day: one short line (mantra, intention, single priority, or a question to keep in mind). Not a journal summary. null = remove what was written on this day (back to the previous intention); empty string = stop any intention from this day onward."),
+        note: z.string().nullable().describe("The intention or question of the day: one short line (mantra, intention, single priority, or a question to keep in mind). Not a journal summary. null or empty string = no intention that day."),
       },
       annotations: { title: "Update day", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
