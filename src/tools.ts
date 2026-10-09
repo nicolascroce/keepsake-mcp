@@ -129,7 +129,8 @@ function withNoteHint(result: ApiResult): ApiResult {
       `This note carries ${count} marginalia — read them with list_note_comments before adding your own, so you do not repeat what is already said.`
     );
   }
-  if (note.workflow_status === "draft" || note.workflow_status === "review") {
+  const status = note.status as { category?: string } | null | undefined;
+  if (status && (status.category === "unstarted" || status.category === "started")) {
     hints.push(
       "The user is still working on this text: if they ask you to review it, put your remarks in the margin (create_note_comment, anchored with a verbatim quote) rather than in the chat, and do not rewrite the note itself."
     );
@@ -746,8 +747,12 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_notes",
     {
       description:
-        "List notes. QuickNotes (inbox, not yet archived) and Notes (archived, permanent). Filter by pinned or archived status, by tag (page) with `tag_id`, or by the day(s) a note is linked to (`date`, or `date_from`/`date_to`) — e.g. \"what did I note for tomorrow?\". Each note carries `dates`, the days it is linked to.",
+        "List notes. QuickNotes (inbox, not yet archived) and Notes (archived, permanent). Filter by pinned or archived status, by tag (page) with `tag_id`, by the day(s) a note is linked to (`date`, or `date_from`/`date_to`) — e.g. \"what did I note for tomorrow?\" —, or by publication-flow stage with `status` — e.g. \"which notes are waiting for review?\". Each note carries `dates` (the days it is linked to) and `status` (its stage in the publication flow, or null).",
       inputSchema: {
+        status: z
+          .string()
+          .optional()
+          .describe("Publication-flow stage: a stage name, key or id from list_note_statuses (e.g. \"review\"), \"publication\" (every note in the flow that is not published yet), or \"none\" (notes outside the flow)"),
         pinned: z.boolean().optional().describe("Filter pinned notes only"),
         archived: z.boolean().optional().describe("Filter by status: true = Notes (archived/permanent), false = QuickNotes (inbox)"),
         date: z.string().optional().describe("Only notes linked to this day (YYYY-MM-DD)"),
@@ -760,10 +765,23 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
       },
       annotations: { title: "List notes", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset }) => {
+    async ({ status, pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset }) => {
       return toContent(
-        await fetchApi(`/notes${qs({ pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset })}`)
+        await fetchApi(`/notes${qs({ status, pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset })}`)
       );
+    }
+  );
+
+  server.registerTool(
+    "list_note_statuses",
+    {
+      description:
+        "List the stages of the user's publication flow, in order (by default: Idea → In progress → To review → Ready → Published). A note enters this flow when the user may publish it — most notes never do and have no stage. Stages are the user's own: they can rename, recolor, add or remove them, so read this list before setting a stage with update_note or create_note. `category` is fixed: unstarted, started, or published (exactly one stage). Names are in the user's app language.",
+      inputSchema: {},
+      annotations: { title: "List note statuses", readOnlyHint: true, openWorldHint: false },
+    },
+    async () => {
+      return toContent(await fetchApi("/note-statuses"));
     }
   );
 
@@ -802,6 +820,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string())
           .optional()
           .describe("Days to link the note to (YYYY-MM-DD each). The note appears in each day's view."),
+        status: z
+          .string()
+          .optional()
+          .describe("Put the note straight into the publication flow at this stage (name, key or id from list_note_statuses). The note is then created as a permanent Note, not an Inbox QuickNote — like \"Keep to publish\" in the app. Only when the user says they may publish it."),
       },
       annotations: { title: "Create note", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -813,7 +835,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "update_note",
     {
-      description: "Update an existing QuickNote or Note. `dates` REPLACES the full set of days the note is linked to — the way to move a note to another day (\"not done, push it to tomorrow\"). To add or remove a single day without touching the others, prefer link_note_date / unlink_note_date.",
+      description: "Update an existing QuickNote or Note. `dates` REPLACES the full set of days the note is linked to — the way to move a note to another day (\"not done, push it to tomorrow\"). To add or remove a single day without touching the others, prefer link_note_date / unlink_note_date. `status` moves the note along the publication flow (\"this one is ready\"); setting a stage on an Inbox QuickNote also keeps it as a Note.",
       inputSchema: {
         id: z.string().uuid().describe("Note UUID"),
         content: z.string().optional().describe("Updated content"),
@@ -833,6 +855,11 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string())
           .optional()
           .describe("Replace the days the note is linked to (YYYY-MM-DD each). Empty array = unlink from every day."),
+        status: z
+          .string()
+          .nullable()
+          .optional()
+          .describe("Publication-flow stage: name, key or id from list_note_statuses. null takes the note out of the flow."),
       },
       annotations: { title: "Update note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },

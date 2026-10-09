@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.14.2",
+  "version": "1.15.0",
   "description": "Connect Claude to your Keepsake personal CRM. Manage contacts, log interactions, organize tasks, capture notes, and more.",
   "long_description": "Keepsake MCP server connects Claude to the Keepsake personal CRM — the app for nurturing your relationships. With 67 tools, you can manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
@@ -140,7 +140,11 @@
     },
     {
       "name": "list_notes",
-      "description": "List notes (pinned, archived, day, company or page)"
+      "description": "List notes (pinned, archived, day, company, page or publication-flow stage)"
+    },
+    {
+      "name": "list_note_statuses",
+      "description": "List the stages of the user's publication flow"
     },
     {
       "name": "get_note",
