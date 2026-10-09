@@ -1,13 +1,14 @@
 # keepsake-mcp
 
-MCP server for [Keepsake](https://keepsake.place) — the personal CRM that helps you nurture your relationships.
+MCP server for [Keepsake](https://keepsake.place) (keepsake.place), the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing.
 
 Connect your AI assistant (Claude, Cursor, or any MCP-compatible client) to your Keepsake data: contacts, interactions, tasks, notes, daily intentions, companies, and tags.
 
 ## Why
 
-Your AI assistant becomes a personal relationship manager. Ask it to:
+Your AI assistant forgets between conversations; Keepsake remembers. Ask it to:
 
+- "Capture this idea for my next article in #newsletter#"
 - "Who did I last talk to at Acme Corp?"
 - "Add a note that I ran into Sarah at the conference"
 - "What tasks are overdue?"

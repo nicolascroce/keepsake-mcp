@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nicolascroce/keepsake",
-  "description": "MCP server for Keepsake \u2014 the personal CRM for nurturing your relationships",
+  "description": "Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads",
   "repository": {
     "url": "https://github.com/nicolascroce/keepsake-mcp",
     "source": "github"
   },
-  "version": "1.15.0",
+  "version": "1.15.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "keepsake-mcp",
-      "version": "1.15.0",
+      "version": "1.15.1",
       "transport": {
         "type": "stdio"
       },
