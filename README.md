@@ -115,7 +115,7 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (84)
+## Available tools (88)
 
 ### Contacts
 | Tool | Description |
@@ -197,10 +197,18 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 ### Day blocks (Day-view timeline)
 | Tool | Description |
 |------|-------------|
-| `list_day_blocks` | List a day's time blocks, in timeline order |
+| `list_day_blocks` | List a day's time blocks, in timeline order (creates that day's recurring blocks first) |
 | `create_day_block` | Create a block, auto-placed first-fit (or pinned via anchor_time) |
 | `update_day_block` | Update a block (title, duration, anchor, note, done) |
-| `delete_day_block` | Delete a block and prune its timeline ref |
+| `delete_day_block` | Delete a block and prune its timeline ref (on a recurring block: remove it from that day only) |
+
+### Recurring blocks (ideal day / ideal week, habits)
+| Tool | Description |
+|------|-------------|
+| `list_recurring_blocks` | List the blocks that come back on chosen weekdays (the user's ideal week and habits) |
+| `create_recurring_block` | Make a block recurring — from an existing block, or from scratch |
+| `update_recurring_block` | Change a recurring block from a date onward (title, duration, fixed time, weekdays) — the past is never rewritten |
+| `stop_recurring_block` | Stop a repetition from a date onward; past days keep their blocks |
 
 ### Tags
 | Tool | Description |

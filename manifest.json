@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.15.1",
+  "version": "1.16.0",
   "description": "Connect Claude to Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads. Capture notes, organize tasks, keep track of the people who matter.",
-  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 84 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 88 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
     "name": "Nicolas Croce",
     "url": "https://github.com/nicolascroce"
@@ -201,6 +201,22 @@
     {
       "name": "delete_day_block",
       "description": "Delete a time block and prune its timeline ref"
+    },
+    {
+      "name": "list_recurring_blocks",
+      "description": "List the blocks that come back on chosen weekdays (ideal week, habits)"
+    },
+    {
+      "name": "create_recurring_block",
+      "description": "Make a time block recurring on chosen weekdays"
+    },
+    {
+      "name": "update_recurring_block",
+      "description": "Change a recurring block from a date onward"
+    },
+    {
+      "name": "stop_recurring_block",
+      "description": "Stop a recurring block from a date onward"
     },
     {
       "name": "list_tags",

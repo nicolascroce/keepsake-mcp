@@ -985,7 +985,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_day_blocks",
     {
       description:
-        "List the time blocks of a day's timeline (Day view), in timeline order. A block is either an activity (type 'block') or a task bucket (type 'tasks' — groups the day's untimed tasks). The meta carries the day's raw timeline_order: \"b:<uuid>\" refs are blocks, bare uuids are tasks inside a bucket's run.",
+        "List the time blocks of a day's timeline (Day view), in timeline order. A block is either an activity (type 'block') or a task bucket (type 'tasks' — groups the day's untimed tasks). The meta carries the day's raw timeline_order: \"b:<uuid>\" refs are blocks, bare uuids are tasks inside a bucket's run.\n\nRecurring blocks: listing today or a future day first creates that day's recurring blocks if they do not exist yet (same as opening the day in the app), so every block returned has a real id you can update or mark done. A block that repeats carries `repeats: { recurring_block_id, weekdays }` (ISO weekdays, 1 = Monday … 7 = Sunday); otherwise `repeats` is null. Past days are never filled in afterwards.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
       },
@@ -1033,7 +1033,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "update_day_block",
     {
       description:
-        "Update a time block (title, duration, anchor, note, done). Only send fields you want to change. The block keeps its position in the timeline order.",
+        "Update a time block (title, duration, anchor, note, done). Only send fields you want to change. The block keeps its position in the timeline order.\n\nMarking a block done records when it actually happened: it ends now and starts its planned duration earlier (never before the previous done block ended). In the app, a done block then stays at that time in the past of the day, while what is left to do stacks from the current time. A block with a fixed time keeps its hour.",
       inputSchema: {
         id: z.string().uuid().describe("Block UUID"),
         title: z.string().nullable().optional().describe("Block label"),
@@ -1064,7 +1064,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "delete_day_block",
     {
       description:
-        "Delete a time block. Its ref is pruned from the day's timeline_order; for a task bucket, the tasks themselves are untouched (they fall back to the day's computed bucket).",
+        "Delete a time block. Its ref is pruned from the day's timeline_order; for a task bucket, the tasks themselves are untouched (they fall back to the day's computed bucket).\n\nOn a recurring block, this removes it from THAT DAY ONLY (the app's \"Remove from today\"): the block keeps coming back on the other days, and the skipped day does not break the habit streak. To stop the repetition itself, use stop_recurring_block.",
       inputSchema: {
         id: z.string().uuid().describe("Block UUID"),
       },
@@ -1072,6 +1072,96 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     },
     async ({ id }) => {
       return toContent(await fetchApi(`/day-blocks/${id}`, "DELETE"));
+    }
+  );
+
+  // ===========================================================================
+  // RECURRING BLOCKS (ideal day / ideal week — also the user's habits)
+  // ===========================================================================
+
+  const weekdaysSchema = z
+    .array(z.number().int().min(1).max(7))
+    .describe("ISO weekdays the block comes back on: 1 = Monday … 7 = Sunday. Every day = [1,2,3,4,5,6,7]; working week = [1,2,3,4,5].");
+
+  server.registerTool(
+    "list_recurring_blocks",
+    {
+      description:
+        "List the user's recurring time blocks: their ideal day / ideal week (\"Meditation\" every day at 08:00, \"Writing\" on weekday mornings). A recurring block is also a habit: each day it appears on the timeline as a regular block the user checks off (see list_day_blocks), and consecutive checked days form a streak. `weekdays` is the rule in force on the given date; `next_change` announces a rule already recorded for later (a repetition that starts or stops on a future date).",
+      inputSchema: {
+        date: z.string().optional().describe("Date the rule is read at (YYYY-MM-DD). Default: today (UTC)."),
+        include_stopped: z.boolean().optional().describe("Also return repetitions that no longer plan anything (default false)"),
+      },
+      annotations: { title: "List recurring blocks", readOnlyHint: true, openWorldHint: false },
+    },
+    async ({ date, include_stopped }) => {
+      return toContent(await fetchApi(`/recurring-blocks${qs({ date, include_stopped })}`));
+    }
+  );
+
+  server.registerTool(
+    "create_recurring_block",
+    {
+      description:
+        "Make a time block come back on chosen weekdays. Two ways: pass `block_id` to turn an EXISTING block into a recurring one (it becomes the first occurrence and keeps its title, duration and fixed time — do this when the block is already on the timeline, otherwise that day would get it twice), or describe a new one (title, duration, optional fixed time) starting on `start_date`. Nothing is created on the timeline right away: each day's block appears when that day is opened in the app or listed with list_day_blocks. With `anchor_time` the block sits at that hour every day; without it, it is placed from the user's wake time and shifts with it.",
+      inputSchema: {
+        weekdays: weekdaysSchema,
+        block_id: z.string().uuid().optional().describe("Existing block to repeat (from list_day_blocks). When given, title/type/duration/anchor/start_date are taken from that block."),
+        title: z.string().optional().describe("Block label (e.g. \"Meditation\")"),
+        type: z.enum(["block", "tasks"]).optional().describe("'block' = activity (default). 'tasks' = a recurring task bucket (e.g. a daily \"Writing\" window the day's tasks go into)."),
+        duration_minutes: z.number().int().min(1).max(1440).optional().describe("Duration in minutes (default 30 for an activity, 60 for a bucket)"),
+        anchor_time: z
+          .string()
+          .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+          .optional()
+          .describe("Fixed wall-clock hour HH:MM. Omit for a block that follows the wake time."),
+        start_date: z.string().optional().describe("First day the rule applies (YYYY-MM-DD). Default: today (UTC). Pass the user's local date when you know it."),
+      },
+      annotations: { title: "Create recurring block", destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    async (params) => {
+      return toContent(await fetchApi("/recurring-blocks", "POST", params));
+    }
+  );
+
+  server.registerTool(
+    "update_recurring_block",
+    {
+      description:
+        "Change a recurring block FROM A DATE ONWARD (title, duration, fixed time, weekdays). The past is never rewritten: earlier days keep their blocks as they were, and the habit keeps its history. Upcoming occurrences already created and not yet checked are updated, or removed if their day is no longer planned. To change a single day only, use update_day_block on that day's block instead.",
+      inputSchema: {
+        id: z.string().uuid().describe("Recurring block UUID (from list_recurring_blocks, or `repeats.recurring_block_id` of a day block)"),
+        title: z.string().nullable().optional().describe("Block label"),
+        duration_minutes: z.number().int().min(1).max(1440).optional().describe("Duration in minutes"),
+        anchor_time: z
+          .string()
+          .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+          .nullable()
+          .optional()
+          .describe("Fixed wall-clock hour HH:MM. Pass null to let the block follow the wake time."),
+        weekdays: weekdaysSchema.optional(),
+        from_date: z.string().optional().describe("First day the change applies (YYYY-MM-DD). Default: today (UTC)."),
+      },
+      annotations: { title: "Update recurring block", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ id, ...body }) => {
+      return toContent(await fetchApi(`/recurring-blocks/${id}`, "PATCH", body));
+    }
+  );
+
+  server.registerTool(
+    "stop_recurring_block",
+    {
+      description:
+        "Stop a recurring block from a date onward (the app's \"Stop repeating\"). Past days keep their blocks and the habit keeps its history; upcoming occurrences already created and not yet checked are removed. To skip a single day and keep the repetition, use delete_day_block on that day's block.",
+      inputSchema: {
+        id: z.string().uuid().describe("Recurring block UUID"),
+        from_date: z.string().optional().describe("First day without the block (YYYY-MM-DD). Default: today (UTC)."),
+      },
+      annotations: { title: "Stop recurring block", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ id, from_date }) => {
+      return toContent(await fetchApi(`/recurring-blocks/${id}${qs({ from_date })}`, "DELETE"));
     }
   );
 
