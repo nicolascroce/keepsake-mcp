@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Connect Claude to Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads. Capture notes, organize tasks, keep track of the people who matter.",
-  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 88 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 89 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
     "name": "Nicolas Croce",
     "url": "https://github.com/nicolascroce"
@@ -152,7 +152,7 @@
     },
     {
       "name": "create_note",
-      "description": "Create a quick note"
+      "description": "Create a quick note, or a permanent Note directly (archived)"
     },
     {
       "name": "update_note",
@@ -165,6 +165,10 @@
     {
       "name": "pin_note",
       "description": "Pin a note as a post-it (short reference always at hand)"
+    },
+    {
+      "name": "unpin_note",
+      "description": "Unpin a note"
     },
     {
       "name": "archive_note",
@@ -220,7 +224,7 @@
     },
     {
       "name": "list_tags",
-      "description": "List all tags"
+      "description": "List tags (filters: name, archived, favorite)"
     },
     {
       "name": "get_tag",
@@ -232,7 +236,7 @@
     },
     {
       "name": "update_tag",
-      "description": "Update a tag (name, color, icon, favorite, order of tasks and sections)"
+      "description": "Update a tag (name, color, icon, favorite, archived, order of tasks and sections)"
     },
     {
       "name": "delete_tag",

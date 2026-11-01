@@ -115,7 +115,7 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (88)
+## Available tools (89)
 
 ### Contacts
 | Tool | Description |
@@ -169,10 +169,11 @@ rather than in the chat, which disappears.
 | `list_notes` | List notes — filter by pinned/archived, day, company, page (`tag_id`), publication-flow stage (`status`) |
 | `list_note_statuses` | The stages of the user's publication flow (Idea → In progress → To review → Ready → Published by default — the user can rename, add or remove them) |
 | `get_note` | Get one note by ID with its tags, contacts, tasks and linked notes |
-| `create_note` | Create a note — supports `#tag#` and `[[tag]]` syntax; `status` puts it straight into the publication flow |
+| `create_note` | Create a note — supports `#tag#` and `[[tag]]` syntax; `archived` creates a permanent Note directly (no Inbox), `status` puts it straight into the publication flow |
 | `update_note` | Update note content, links, days, or its publication-flow stage (`status`) |
 | `delete_note` | Soft-delete (or permanent) |
 | `pin_note` | Pin as a post-it (short reference always at hand) |
+| `unpin_note` | Unpin a note (it stays where it is) |
 | `archive_note` | Archive a note |
 | `restore_note` | Restore a deleted/archived note |
 
@@ -213,10 +214,10 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 ### Tags
 | Tool | Description |
 |------|-------------|
-| `list_tags` | List tags (lightweight — ordering arrays omitted), with optional name search (`q`) |
+| `list_tags` | List tags (lightweight — ordering arrays omitted), with optional name search (`q`) and `archived` / `favorite` filters |
 | `get_tag` | Get a tag by ID with all properties, including `tasks_order` (section markers `h:<header_id>`) |
 | `create_tag` | Create a new tag |
-| `update_tag` | Update a tag (name, description, color, icon, favorite, order of tasks and sections via `tasks_order`) |
+| `update_tag` | Update a tag (name, description, color, icon, favorite, `archived` to close a project without deleting anything, order of tasks and sections via `tasks_order`) |
 | `delete_tag` | Permanently delete a tag and all its links |
 | `get_tag_items` | Get items linked to a tag — filter by `types`/`status`, `summary` mode, task `sections` included |
 | `link_tag` | Link any entity to a tag |

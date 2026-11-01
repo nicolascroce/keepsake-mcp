@@ -804,7 +804,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "create_note",
     {
       description:
-        "Create a new QuickNote in the Inbox. QuickNotes are temporary captures — use archive_note to transform one into a permanent Note.\n\nContent supports #tag# and [[tag]] for automatic tag linking.\n\nPass `dates` to attach the note to one or more days (\"note for tomorrow\", meeting prep for Thursday): it then surfaces in that day's view while staying in the notes list. A dated note is NOT a task (no action to complete) and NOT the day's intention (see update_day).",
+        "Create a new QuickNote in the Inbox. QuickNotes are temporary captures — use archive_note to transform one into a permanent Note, or pass archived=true to create the permanent Note directly (reference material the user asked you to keep — a project's status note, meeting minutes filed on a page — rather than a capture for them to sort).\n\nContent supports #tag# and [[tag]] for automatic tag linking.\n\nPass `dates` to attach the note to one or more days (\"note for tomorrow\", meeting prep for Thursday): it then surfaces in that day's view while staying in the notes list. A dated note is NOT a task (no action to complete) and NOT the day's intention (see update_day).",
       inputSchema: {
         content: z.string().describe("Note content (supports #tag# and [[tag]])"),
         is_pinned: z.boolean().optional().describe("Pin the note (default: false)"),
@@ -824,6 +824,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .string()
           .optional()
           .describe("Put the note straight into the publication flow at this stage (name, key or id from list_note_statuses). The note is then created as a permanent Note, not an Inbox QuickNote — like \"Keep to publish\" in the app. Only when the user says they may publish it."),
+        archived: z
+          .boolean()
+          .optional()
+          .describe("Create a permanent Note directly instead of an Inbox QuickNote (default: false). Tags, links and @mentions work the same. Implied by status."),
       },
       annotations: { title: "Create note", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -895,6 +899,20 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     },
     async ({ id }) => {
       return toContent(await fetchApi(`/notes/${id}/pin`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unpin_note",
+    {
+      description: "Unpin a note: it leaves the pinned post-its and stays where it is (Inbox or Notes), nothing else changes. Use when a pinned reference is no longer needed at hand — e.g. a project status note replaced by a newer one, or a project being closed.",
+      inputSchema: {
+        id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Unpin note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ id }) => {
+      return toContent(await fetchApi(`/notes/${id}/unpin`, "POST"));
     }
   );
 
@@ -1173,16 +1191,24 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_tags",
     {
       description:
-        "List tags (lightweight: the manual tasks_order arrays are omitted — use get_tag for a tag's full ordering). Tags organize contacts, entries, tasks, notes, and companies. Use q to find a tag by name.",
+        "List tags (lightweight: the manual tasks_order arrays are omitted — use get_tag for a tag's full ordering). Tags organize contacts, entries, tasks, notes, and companies. Use q to find a tag by name. Archived tags (closed projects) are included unless you pass archived=false; each tag's archived_at tells which.",
       inputSchema: {
         q: z.string().optional().describe("Filter by name (case-insensitive substring match)"),
+        archived: z
+          .boolean()
+          .optional()
+          .describe("true: only archived tags; false: only active tags (default: both)"),
+        favorite: z
+          .boolean()
+          .optional()
+          .describe("true: only the user's favorite tags (sidebar); false: only non-favorites (default: both)"),
         limit: z.number().int().positive().optional().describe("Max results (default 50)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List tags", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ q, limit, offset }) => {
-      return toContent(await fetchApi(`/tags${qs({ q, limit, offset })}`));
+    async ({ q, archived, favorite, limit, offset }) => {
+      return toContent(await fetchApi(`/tags${qs({ q, archived, favorite, limit, offset })}`));
     }
   );
 
@@ -1243,7 +1269,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "update_tag",
     {
-      description: "Update an existing tag. Only send the fields you want to change. Supports name, description, color, icon, favorite status, and the order of the page's tasks and sections (tasks_order).",
+      description: "Update an existing tag. Only send the fields you want to change. Supports name, description, color, icon, favorite status, archiving, and the order of the page's tasks and sections (tasks_order). The description is the place for a page's state (status, deadline, next step): there is no separate field for it.",
       inputSchema: {
         id: z.string().uuid().describe("Tag UUID"),
         name: z.string().optional().describe("Tag name"),
@@ -1255,6 +1281,10 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .optional()
           .describe("Full display order of the page's tasks: task ids and \"h:<header_id>\" entries for sections, top to bottom. Read the current one with get_tag, insert or move entries, send the whole array back. Tasks listed after a section belong to it."),
         is_favorite: z.boolean().optional().describe("Whether the tag is a favorite"),
+        archived: z
+          .boolean()
+          .optional()
+          .describe("true archives the tag: it leaves the active surfaces (sidebar, page lists, suggestions) but nothing is deleted — its notes, tasks and links stay, and it can be unarchived with false. The way to close a finished project."),
       },
       annotations: { title: "Update tag", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
