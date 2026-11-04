@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "description": "Connect Claude to Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads. Capture notes, organize tasks, keep track of the people who matter.",
-  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 89 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 96 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
     "name": "Nicolas Croce",
     "url": "https://github.com/nicolascroce"
@@ -223,6 +223,14 @@
       "description": "Stop a recurring block from a date onward"
     },
     {
+      "name": "keep_recurring_block_note",
+      "description": "Keep a note in a recurring block: every occurrence shows it from a date onward"
+    },
+    {
+      "name": "stop_keeping_recurring_block_note",
+      "description": "Stop keeping a note in a recurring block from a date onward; earlier days keep it"
+    },
+    {
       "name": "list_tags",
       "description": "List tags (filters: name, archived, favorite)"
     },
@@ -241,6 +249,10 @@
     {
       "name": "delete_tag",
       "description": "Delete a tag permanently"
+    },
+    {
+      "name": "merge_tag",
+      "description": "Merge a duplicate tag into another (links moved, content rewritten)"
     },
     {
       "name": "get_tag_items",
@@ -309,6 +321,22 @@
     {
       "name": "unlink_task_note",
       "description": "Remove a note link from a task"
+    },
+    {
+      "name": "link_day_block_note",
+      "description": "Link an existing note to a time block of the timeline"
+    },
+    {
+      "name": "unlink_day_block_note",
+      "description": "Remove a note link from a time block"
+    },
+    {
+      "name": "link_entry_note",
+      "description": "Link an existing note to an entry (its write-up)"
+    },
+    {
+      "name": "unlink_entry_note",
+      "description": "Remove a note link from an entry"
     },
     {
       "name": "link_notes",

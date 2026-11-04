@@ -1,6 +1,6 @@
 {
   "name": "keepsake-mcp",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "description": "MCP server for Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads — connect your AI to your notes, tasks and contacts",
   "type": "module",
   "bin": {
@@ -29,6 +29,10 @@
     "notes"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolascroce/keepsake-mcp"
+  },
   "mcpName": "io.github.nicolascroce/keepsake",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",

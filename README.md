@@ -29,6 +29,8 @@ No installation required. Works with Claude iOS, Claude web, Claude Desktop Conn
 
 **Endpoint:** `https://app.keepsake.place/api/mcp`
 
+The official MCP registry entry (`server.json`) publishes this URL as a `streamable-http` remote, plus the project title and website. The npm package version stays on the release that was published; the registry entry version is the `version` field of `server.json`.
+
 **Authentication:** Pass your API key as a Bearer token in the `Authorization` header.
 
 **Claude Desktop (Connectors):**
@@ -115,7 +117,7 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (89)
+## Available tools (96)
 
 ### Contacts
 | Tool | Description |
@@ -210,6 +212,8 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `create_recurring_block` | Make a block recurring — from an existing block, or from scratch |
 | `update_recurring_block` | Change a recurring block from a date onward (title, duration, fixed time, weekdays) — the past is never rewritten |
 | `stop_recurring_block` | Stop a repetition from a date onward; past days keep their blocks |
+| `keep_recurring_block_note` | Keep a note in a recurring block: every occurrence shows it from a date onward (a running log, a routine checklist) |
+| `stop_keeping_recurring_block_note` | Stop keeping a note in a recurring block from a date onward; earlier days keep it |
 
 ### Tags
 | Tool | Description |
@@ -219,6 +223,7 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `create_tag` | Create a new tag |
 | `update_tag` | Update a tag (name, description, color, icon, favorite, `archived` to close a project without deleting anything, order of tasks and sections via `tasks_order`) |
 | `delete_tag` | Permanently delete a tag and all its links |
+| `merge_tag` | Merge a duplicate tag into another: links moved, `#source#` rewritten as the target's name, source deleted |
 | `get_tag_items` | Get items linked to a tag — filter by `types`/`status`, `summary` mode, task `sections` included |
 | `link_tag` | Link any entity to a tag |
 | `unlink_tag` | Remove a tag link |
@@ -246,6 +251,10 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | `unlink_task_contact` | Remove a contact link from a task |
 | `link_task_note` | Link a note to a task (non-destructive, the note survives) |
 | `unlink_task_note` | Remove a note link from a task |
+| `link_day_block_note` | Link a note to a time block (prepare before, write what happened after) |
+| `unlink_day_block_note` | Remove a note link from a time block |
+| `link_entry_note` | Link a note to an entry (its write-up) |
+| `unlink_entry_note` | Remove a note link from an entry |
 | `link_notes` | Link two notes together (symmetric, non-destructive) |
 | `unlink_notes` | Remove the manual link between two notes |
 | `link_note_date` | Attach a note to a calendar day (it surfaces in that day's view) |

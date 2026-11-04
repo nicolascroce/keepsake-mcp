@@ -474,6 +474,15 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Array of tag UUIDs to link"),
+        note_ids: z
+          .array(z.string().uuid())
+          .optional()
+          .describe("Notes to link to the entry (its write-up). See link_entry_note."),
+        day_block_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Timeline block this entry tells (from list_day_blocks). One entry per block at most: a block that already has one returns 409 with its entry_id. In the app, the entry then replaces the checked block in the day's Journal."),
       },
       annotations: { title: "Create entry", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -1003,7 +1012,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_day_blocks",
     {
       description:
-        "List the time blocks of a day's timeline (Day view), in timeline order. A block is either an activity (type 'block') or a task bucket (type 'tasks' — groups the day's untimed tasks). The meta carries the day's raw timeline_order: \"b:<uuid>\" refs are blocks, bare uuids are tasks inside a bucket's run.\n\nRecurring blocks: listing today or a future day first creates that day's recurring blocks if they do not exist yet (same as opening the day in the app), so every block returned has a real id you can update or mark done. A block that repeats carries `repeats: { recurring_block_id, weekdays }` (ISO weekdays, 1 = Monday … 7 = Sunday); otherwise `repeats` is null. Past days are never filled in afterwards.",
+        "List the time blocks of a day's timeline (Day view), in timeline order. A block is either an activity (type 'block') or a task bucket (type 'tasks' — groups the day's untimed tasks). The meta carries the day's raw timeline_order: \"b:<uuid>\" refs are blocks, bare uuids are tasks inside a bucket's run.\n\nRecurring blocks: listing today or a future day first creates that day's recurring blocks if they do not exist yet (same as opening the day in the app), so every block returned has a real id you can update or mark done. A block that repeats carries `repeats: { recurring_block_id, weekdays }` (ISO weekdays, 1 = Monday … 7 = Sunday); otherwise `repeats` is null. Past days are never filled in afterwards.\n\nNotes: each block carries `notes` ([{ id, title, content }], real Keepsake notes linked to the block — prepared before, completed after), `note` (the first note's text) and `entry_id` (the short entry that tells the block, created by the app's \"Add details\" or by create_entry with day_block_id; null if none). A recurring block also carries `kept_notes` (same shape): notes kept by its repetition, shown on every occurrence from the day they were kept (see keep_recurring_block_note) — `notes` and `note` are that day's own notes only.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
       },
@@ -1038,7 +1047,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
           .optional()
           .describe("Pin the block at a fixed wall-clock hour HH:MM (it becomes a wall other blocks flow around). Omit for automatic first-fit placement."),
-        note: z.string().optional().describe("Free note attached to the block"),
+        note: z.string().optional().describe("Text of the block's note: a real note is created (kept out of the Inbox) and linked to the block. Supports #tag#, [[tag]] and @Name@. To attach an existing note, use link_day_block_note."),
       },
       annotations: { title: "Create day block", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -1068,7 +1077,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .nullable()
           .optional()
           .describe("Fixed wall-clock hour HH:MM. Pass null to unpin (the block flows with the rest again)."),
-        note: z.string().nullable().optional().describe("Free note. Pass null to clear."),
+        note: z.string().nullable().optional().describe("Text of the block's first linked note (created and linked if the block has none). An empty value or null changes nothing: to detach a note, use unlink_day_block_note."),
         done: z.boolean().optional().describe("Mark the block done (true) or not done (false)"),
       },
       annotations: { title: "Update day block", destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -1105,7 +1114,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_recurring_blocks",
     {
       description:
-        "List the user's recurring time blocks: their ideal day / ideal week (\"Meditation\" every day at 08:00, \"Writing\" on weekday mornings). A recurring block is also a habit: each day it appears on the timeline as a regular block the user checks off (see list_day_blocks), and consecutive checked days form a streak. `weekdays` is the rule in force on the given date; `next_change` announces a rule already recorded for later (a repetition that starts or stops on a future date).",
+        "List the user's recurring time blocks: their ideal day / ideal week (\"Meditation\" every day at 08:00, \"Writing\" on weekday mornings). A recurring block is also a habit: each day it appears on the timeline as a regular block the user checks off (see list_day_blocks), and consecutive checked days form a streak. `weekdays` is the rule in force on the given date; `next_change` announces a rule already recorded for later (a repetition that starts or stops on a future date). `notes` lists the notes the repetition keeps ([{ note_id, title, from_date, until_date }], until_date excluded, null = no end; see keep_recurring_block_note).",
       inputSchema: {
         date: z.string().optional().describe("Date the rule is read at (YYYY-MM-DD). Default: today (UTC)."),
         include_stopped: z.boolean().optional().describe("Also return repetitions that no longer plan anything (default false)"),
@@ -1296,7 +1305,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "delete_tag",
     {
-      description: "Permanently delete a tag and all its links to contacts, entries, tasks, notes, and companies.",
+      description: "Permanently delete a tag and all its links to contacts, entries, tasks, notes, and companies. Its #tag# / [[tag]] markers are stripped from all content (the words stay). To fold a duplicate into another tag, use merge_tag instead.",
       inputSchema: {
         id: z.string().uuid().describe("Tag UUID"),
       },
@@ -1304,6 +1313,22 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     },
     async ({ id }) => {
       return toContent(await fetchApi(`/tags/${id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "merge_tag",
+    {
+      description:
+        "Merge a duplicate tag (page) INTO another one: all its links (contacts, entries, tasks, notes, companies) move to the target without duplicates, every #source# / [[source]] in content is rewritten as the target's name, then the source tag is deleted. Use it when two pages describe the same project or theme (e.g. 'Livre' and 'livre photo'), or when update_tag refuses a rename because the name already exists. Confirm with your user which page to keep.",
+      inputSchema: {
+        source_id: z.string().uuid().describe("UUID of the tag to merge away (it will be deleted)"),
+        target_id: z.string().uuid().describe("UUID of the tag to keep"),
+      },
+      annotations: { title: "Merge tags", destructiveHint: true, idempotentHint: false, openWorldHint: false },
+    },
+    async ({ source_id, target_id }) => {
+      return toContent(await fetchApi(`/tags/${source_id}/merge`, "POST", { target_id }));
     }
   );
 
@@ -1635,6 +1660,103 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     },
     async ({ task_id, note_id }) => {
       return toContent(await fetchApi(`/tasks/${task_id}/notes/${note_id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_day_block_note",
+    {
+      description:
+        "Link an existing note to a time block of the timeline (N-N, non-destructive). A block's notes are where the user prepares it (before) and writes what happened (after) — the same note, completed. The app shows the note's title on the block's card and opens the note right in the block. Get block ids from list_day_blocks.",
+      inputSchema: {
+        day_block_id: z.string().uuid().describe("Block UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Link day block note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ day_block_id, note_id }) => {
+      return toContent(await fetchApi(`/day-blocks/${day_block_id}/notes/${note_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_day_block_note",
+    {
+      description: "Remove the link between a note and a time block. Both the block and the note survive.",
+      inputSchema: {
+        day_block_id: z.string().uuid().describe("Block UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Unlink day block note", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ day_block_id, note_id }) => {
+      return toContent(await fetchApi(`/day-blocks/${day_block_id}/notes/${note_id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "keep_recurring_block_note",
+    {
+      description:
+        "Keep a note in a recurring block (the app's \"Keep for the following days\"): from `from_date` on, every occurrence of the repetition shows it — a running log for a project block, a checklist for a routine. Days already planned are included, earlier days are untouched. Nothing is copied: it is one note, the same everywhere. A note written in a recurring block belongs to that day only until it is kept. Get repetition ids from list_recurring_blocks (or `repeats.recurring_block_id` in list_day_blocks); each repetition lists its kept notes in `notes`.",
+      inputSchema: {
+        recurring_block_id: z.string().uuid().describe("Recurring block (repetition) UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+        from_date: z.string().optional().describe("First day the note appears (YYYY-MM-DD). Default: today (UTC)."),
+      },
+      annotations: { title: "Keep recurring block note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ recurring_block_id, note_id, from_date }) => {
+      return toContent(await fetchApi(`/recurring-blocks/${recurring_block_id}/notes/${note_id}`, "POST", from_date ? { from_date } : {}));
+    }
+  );
+
+  server.registerTool(
+    "stop_keeping_recurring_block_note",
+    {
+      description:
+        "Stop keeping a note in a recurring block (the app's \"Stop keeping\"): occurrences on or after `from_date` no longer show it, earlier days keep it. The note itself survives. To keep it on one particular day only, link it to that day's block afterwards with link_day_block_note.",
+      inputSchema: {
+        recurring_block_id: z.string().uuid().describe("Recurring block (repetition) UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+        from_date: z.string().optional().describe("First day the note no longer appears (YYYY-MM-DD). Default: today (UTC)."),
+      },
+      annotations: { title: "Stop keeping recurring block note", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ recurring_block_id, note_id, from_date }) => {
+      const query = from_date ? `?from_date=${encodeURIComponent(from_date)}` : "";
+      return toContent(await fetchApi(`/recurring-blocks/${recurring_block_id}/notes/${note_id}${query}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "link_entry_note",
+    {
+      description:
+        "Link an existing note to an entry (N-N, non-destructive): the note is the write-up of that interaction, shown as a preview on the entry's card. Typical case: after a meeting block, the short entry (\"Meeting · Coffee with Constance\") points to the note where the user prepared then wrote the meeting.",
+      inputSchema: {
+        entry_id: z.string().uuid().describe("Entry UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Link entry note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ entry_id, note_id }) => {
+      return toContent(await fetchApi(`/entries/${entry_id}/notes/${note_id}`, "POST"));
+    }
+  );
+
+  server.registerTool(
+    "unlink_entry_note",
+    {
+      description: "Remove the link between a note and an entry. Both the entry and the note survive.",
+      inputSchema: {
+        entry_id: z.string().uuid().describe("Entry UUID"),
+        note_id: z.string().uuid().describe("Note UUID"),
+      },
+      annotations: { title: "Unlink entry note", destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ entry_id, note_id }) => {
+      return toContent(await fetchApi(`/entries/${entry_id}/notes/${note_id}`, "DELETE"));
     }
   );
 

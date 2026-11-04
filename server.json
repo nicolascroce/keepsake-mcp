@@ -1,17 +1,19 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nicolascroce/keepsake",
+  "title": "Keepsake",
   "description": "Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads",
+  "websiteUrl": "https://keepsake.place/en/ai",
   "repository": {
     "url": "https://github.com/nicolascroce/keepsake-mcp",
     "source": "github"
   },
-  "version": "1.17.0",
+  "version": "1.18.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "keepsake-mcp",
-      "version": "1.17.0",
+      "version": "1.18.0",
       "transport": {
         "type": "stdio"
       },
@@ -24,6 +26,12 @@
           "name": "KEEPSAKE_API_KEY"
         }
       ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://app.keepsake.place/api/mcp"
     }
   ]
 }
