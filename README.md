@@ -195,14 +195,14 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 |------|-------------|
 | `list_days` | List days with their intention or question of the day (the one in force, which stays until changed), by date range |
 | `get_day` | Get a day, its intention in force (`intention`, carried over until changed) and what was written that day (`note`) |
-| `update_day` | Set a day's intention or question — one short line, not a journal (upsert); it stays in place on the following days until changed |
+| `update_day` | Set a day's intention or question — one short line, not a journal (upsert), or make it a no-task day (`tasks_skipped`); it stays in place on the following days until changed |
 
 ### Day blocks (Day-view timeline)
 | Tool | Description |
 |------|-------------|
 | `list_day_blocks` | List a day's time blocks, in timeline order (creates that day's recurring blocks first) |
-| `create_day_block` | Create a block, auto-placed first-fit (or pinned via anchor_time) |
-| `update_day_block` | Update a block (title, duration, anchor, note, done) |
+| `create_day_block` | Create a block, auto-placed first-fit (or pinned via anchor_time), with its people and pages (contact_ids, company_ids, tag_ids) |
+| `update_day_block` | Update a block (title, duration, anchor, note, done, people and pages) |
 | `delete_day_block` | Delete a block and prune its timeline ref (on a recurring block: remove it from that day only) |
 
 ### Recurring blocks (ideal day / ideal week, habits)
@@ -233,7 +233,7 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 |------|-------------|
 | `list_task_headers` | List all task headers (section separators) |
 | `get_task_header` | Get a task header by ID |
-| `create_task_header` | Create a task header (section) — insert `h:<id>` in the tag's `tasks_order` to place it |
+| `create_task_header` | Create a task header (section) — `tag_id` adds it at the bottom of that tag's page |
 | `update_task_header` | Update a task header (name, description, collapsed) |
 | `delete_task_header` | Permanently delete a task header |
 

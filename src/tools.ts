@@ -586,7 +586,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "create_task",
     {
       description:
-        "A TASK is an action item to accomplish. Can have due date, recurrence, priority, linked to contacts and tags.\n\nCreate a new task. Title supports #tag# and [[tag]] for automatic tag linking.",
+        "A TASK is an action item to accomplish. Can have due date, recurrence, priority, linked to contacts and tags.\n\nCreate a new task. Title supports #tag# and [[tag]] for automatic tag linking. To file it in a section of a tag page, pass header_id: it lands at the end of that section, without touching the rest of the page's order.",
       inputSchema: {
         title: z.string().describe("Task title (supports #tag# and [[tag]])"),
         description: z.string().optional().describe("Task description"),
@@ -630,6 +630,11 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .array(z.string().uuid())
           .optional()
           .describe("Array of tag UUIDs to link"),
+        header_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Section (task header) of a tag page: the task is linked to that tag and placed at the end of the section. If the section is on several tag pages, name the right one in tag_ids."),
       },
       annotations: { title: "Create task", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -995,7 +1000,8 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         "Create or update a day's intention or question of the day (upsert on the date). The `note` field is the intention or question of the day — one short line at the top of the Today view (a mantra, an intention, a single priority, or a question to keep in mind). Not a journal: never write a summary of the day here.\n\nAn intention is valid for its own day only: it does not carry over to the following days. The user types it by hand each morning, on purpose — do not set it for them unless they ask. `null` or an empty string removes it.\n\nNOT for attaching a note to a day: this field is a single line and you would overwrite the user's intention. To put a note on a day, use create_note with `dates` or link_note_date.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
-        note: z.string().nullable().describe("The intention or question of the day: one short line (mantra, intention, single priority, or a question to keep in mind). Not a journal summary. null or empty string = no intention that day."),
+        note: z.string().nullable().optional().describe("The intention or question of the day: one short line (mantra, intention, single priority, or a question to keep in mind). Not a journal summary. null or empty string = no intention that day. Omit to leave it unchanged."),
+        tasks_skipped: z.boolean().optional().describe("true = no-task day: the day's task blocks are hidden on the Today view and no task is changed (tasks created afterwards still show). false = bring them back. Use only when the user asks for a day without tasks."),
       },
       annotations: { title: "Update day", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
@@ -1012,7 +1018,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_day_blocks",
     {
       description:
-        "List the time blocks of a day's timeline (Day view), in timeline order. A block is either an activity (type 'block') or a task bucket (type 'tasks' — groups the day's untimed tasks). The meta carries the day's raw timeline_order: \"b:<uuid>\" refs are blocks, bare uuids are tasks inside a bucket's run.\n\nRecurring blocks: listing today or a future day first creates that day's recurring blocks if they do not exist yet (same as opening the day in the app), so every block returned has a real id you can update or mark done. A block that repeats carries `repeats: { recurring_block_id, weekdays }` (ISO weekdays, 1 = Monday … 7 = Sunday); otherwise `repeats` is null. Past days are never filled in afterwards.\n\nNotes: each block carries `notes` ([{ id, title, content }], real Keepsake notes linked to the block — prepared before, completed after), `note` (the first note's text) and `entry_id` (the short entry that tells the block, created by the app's \"Add details\" or by create_entry with day_block_id; null if none). A recurring block also carries `kept_notes` (same shape): notes kept by its repetition, shown on every occurrence from the day they were kept (see keep_recurring_block_note) — `notes` and `note` are that day's own notes only.",
+        "List the time blocks of a day's timeline (Day view), in timeline order. A block is either an activity (type 'block') or a task bucket (type 'tasks' — shows the day's untimed tasks, or what its filter selects: `filter_tag_id` = one page, `filter_due` = due dates; null = the day's tasks). The meta carries the day's raw timeline_order: \"b:<uuid>\" refs are blocks, bare uuids after a bucket are the order the user chose for its tasks.\n\nRecurring blocks: listing today or a future day first creates that day's recurring blocks if they do not exist yet (same as opening the day in the app), so every block returned has a real id you can update or mark done. A block that repeats carries `repeats: { recurring_block_id, weekdays }` (ISO weekdays, 1 = Monday … 7 = Sunday); otherwise `repeats` is null. Past days are never filled in afterwards.\n\nNotes: each block carries `notes` ([{ id, title, content }], real Keepsake notes linked to the block — prepared before, completed after), `note` (the first note's text) and `entry_id` (the short entry that tells the block, created by the app's \"Add details\" or by create_entry with day_block_id; null if none). A recurring block also carries `kept_notes` (same shape): notes kept by its repetition, shown on every occurrence from the day they were kept (see keep_recurring_block_note) — `notes` and `note` are that day's own notes only.\n\nPeople and pages: each block carries `contact_ids`, `company_ids` and `tag_ids` (the people, companies and pages it is about — e.g. a meeting with Romain about a project). They are an agenda intention, not history: a contact's timeline does not list blocks; the entry created by \"Add details\" carries the block's people and pages.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
       },
@@ -1023,18 +1029,46 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     }
   );
 
+  // Task block filter (16/11/2026): a task bucket shows every open task that
+  // matches its page and due dates — two buckets may show the same task.
+  const taskFilterTagSchema = z
+    .string()
+    .uuid()
+    .nullable()
+    .optional()
+    .describe("Task buckets only: show only the tasks linked to this page (tag id, from list_tags). null = all pages.");
+  const taskFilterDueSchema = z
+    .array(z.enum(["today", "overdue", "week", "asap", "someday", "all"]))
+    .nullable()
+    .optional()
+    .describe("Task buckets only: which tasks to show, by due date — today, overdue (today only), week (from this day to Sunday), asap, someday, all. null = the day's tasks (today + overdue + ASAP on today), the default. Every bucket shows ALL the open tasks matching its filter, even if another bucket shows them too; the app displays what fits in the block's duration (15 min per task without a duration) and the rest under « show more ».");
+
+  // People and pages of a block (17/11/2026): replace semantics, like a task
+  const blockContactIdsSchema = z
+    .array(z.string().uuid())
+    .optional()
+    .describe("People linked to the block (contact ids). Replaces the list. A title with @Name@ also links that person.");
+  const blockCompanyIdsSchema = z
+    .array(z.string().uuid())
+    .optional()
+    .describe("Companies linked to the block (company ids). Replaces the list.");
+  const blockTagIdsSchema = z
+    .array(z.string().uuid())
+    .optional()
+    .describe("Pages linked to the block (tag ids, from list_tags). Replaces the list. A title with #page# or [[page]] also links that page (created if needed).");
+
   server.registerTool(
     "create_day_block",
     {
       description:
-        "Create a time block on a day's timeline. The block is auto-placed in the earliest free gap large enough for it (same first-fit engine as the app); pass anchor_time to pin it at a fixed hour instead. Its \"b:<id>\" ref is inserted into the day's timeline_order for you — never write timeline_order by hand.",
+        "Create a time block on a day's timeline. The block is auto-placed in the earliest free gap large enough for it (same first-fit engine as the app); pass anchor_time to pin it at a fixed hour instead. Its \"b:<id>\" ref is inserted into the day's timeline_order for you — never write timeline_order by hand.\n\nA block can be about people and pages (contact_ids, company_ids, tag_ids), like a task: \"Meeting #Keepsake Dev# with @Romain Dupont@\" links the page and Romain from its title alone. A note created for the block inherits them.",
       inputSchema: {
         date: z.string().describe("Date (YYYY-MM-DD)"),
         title: z.string().optional().describe("Block label (e.g. \"Deep work\", \"Lunch\")"),
         type: z
           .enum(["block", "tasks"])
           .optional()
-          .describe("'block' = activity (default). 'tasks' = task bucket: a window that gathers the day's untimed tasks."),
+          .describe("'block' = activity (default). 'tasks' = task bucket: a window that shows tasks — by default the day's untimed tasks, or what filter_tag_id / filter_due select."),
         duration_minutes: z
           .number()
           .int()
@@ -1048,6 +1082,11 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .optional()
           .describe("Pin the block at a fixed wall-clock hour HH:MM (it becomes a wall other blocks flow around). Omit for automatic first-fit placement."),
         note: z.string().optional().describe("Text of the block's note: a real note is created (kept out of the Inbox) and linked to the block. Supports #tag#, [[tag]] and @Name@. To attach an existing note, use link_day_block_note."),
+        filter_tag_id: taskFilterTagSchema,
+        filter_due: taskFilterDueSchema,
+        contact_ids: blockContactIdsSchema,
+        company_ids: blockCompanyIdsSchema,
+        tag_ids: blockTagIdsSchema,
       },
       annotations: { title: "Create day block", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -1060,7 +1099,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "update_day_block",
     {
       description:
-        "Update a time block (title, duration, anchor, note, done). Only send fields you want to change. The block keeps its position in the timeline order.\n\nMarking a block done records when it actually happened: it ends now and starts its planned duration earlier (never before the previous done block ended). In the app, a done block then stays at that time in the past of the day, while what is left to do stacks from the current time. A block with a fixed time keeps its hour.",
+        "Update a time block (title, duration, anchor, note, done, people and pages; for a task bucket, its filter: filter_tag_id, filter_due). Only send fields you want to change. The block keeps its position in the timeline order.\n\nMarking a block done records when it actually happened (it ends now and starts its planned duration earlier, never before the previous done block ended); the times can be corrected in the app. In the app's day view, what is done moves to the top, in the order it was done, and what is left follows; a finished fixed-time block no longer pushes anything. The block \"in progress\" is simply the first one not marked done, whatever the time.\n\ncontact_ids, company_ids and tag_ids replace the block's people, companies and pages; a new title with #page# or @Name@ adds what it names.",
       inputSchema: {
         id: z.string().uuid().describe("Block UUID"),
         title: z.string().nullable().optional().describe("Block label"),
@@ -1079,6 +1118,11 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .describe("Fixed wall-clock hour HH:MM. Pass null to unpin (the block flows with the rest again)."),
         note: z.string().nullable().optional().describe("Text of the block's first linked note (created and linked if the block has none). An empty value or null changes nothing: to detach a note, use unlink_day_block_note."),
         done: z.boolean().optional().describe("Mark the block done (true) or not done (false)"),
+        filter_tag_id: taskFilterTagSchema,
+        filter_due: taskFilterDueSchema,
+        contact_ids: blockContactIdsSchema,
+        company_ids: blockCompanyIdsSchema,
+        tag_ids: blockTagIdsSchema,
       },
       annotations: { title: "Update day block", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
@@ -1133,7 +1177,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         "Make a time block come back on chosen weekdays. Two ways: pass `block_id` to turn an EXISTING block into a recurring one (it becomes the first occurrence and keeps its title, duration and fixed time — do this when the block is already on the timeline, otherwise that day would get it twice), or describe a new one (title, duration, optional fixed time) starting on `start_date`. Nothing is created on the timeline right away: each day's block appears when that day is opened in the app or listed with list_day_blocks. With `anchor_time` the block sits at that hour every day; without it, it is placed from the user's wake time and shifts with it.",
       inputSchema: {
         weekdays: weekdaysSchema,
-        block_id: z.string().uuid().optional().describe("Existing block to repeat (from list_day_blocks). When given, title/type/duration/anchor/start_date are taken from that block."),
+        block_id: z.string().uuid().optional().describe("Existing block to repeat (from list_day_blocks). When given, title/type/duration/anchor/start_date (and a bucket's filter) are taken from that block."),
         title: z.string().optional().describe("Block label (e.g. \"Meditation\")"),
         type: z.enum(["block", "tasks"]).optional().describe("'block' = activity (default). 'tasks' = a recurring task bucket (e.g. a daily \"Writing\" window the day's tasks go into)."),
         duration_minutes: z.number().int().min(1).max(1440).optional().describe("Duration in minutes (default 30 for an activity, 60 for a bucket)"),
@@ -1143,6 +1187,8 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .optional()
           .describe("Fixed wall-clock hour HH:MM. Omit for a block that follows the wake time."),
         start_date: z.string().optional().describe("First day the rule applies (YYYY-MM-DD). Default: today (UTC). Pass the user's local date when you know it."),
+        filter_tag_id: taskFilterTagSchema,
+        filter_due: taskFilterDueSchema,
       },
       annotations: { title: "Create recurring block", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -1155,7 +1201,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "update_recurring_block",
     {
       description:
-        "Change a recurring block FROM A DATE ONWARD (title, duration, fixed time, weekdays). The past is never rewritten: earlier days keep their blocks as they were, and the habit keeps its history. Upcoming occurrences already created and not yet checked are updated, or removed if their day is no longer planned. To change a single day only, use update_day_block on that day's block instead.",
+        "Change a recurring block FROM A DATE ONWARD (title, duration, fixed time, weekdays; for a task bucket, its filter). The past is never rewritten: earlier days keep their blocks as they were, and the habit keeps its history. Upcoming occurrences already created and not yet checked are updated, or removed if their day is no longer planned. To change a single day only, use update_day_block on that day's block instead.",
       inputSchema: {
         id: z.string().uuid().describe("Recurring block UUID (from list_recurring_blocks, or `repeats.recurring_block_id` of a day block)"),
         title: z.string().nullable().optional().describe("Block label"),
@@ -1167,6 +1213,8 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .optional()
           .describe("Fixed wall-clock hour HH:MM. Pass null to let the block follow the wake time."),
         weekdays: weekdaysSchema.optional(),
+        filter_tag_id: taskFilterTagSchema,
+        filter_due: taskFilterDueSchema,
         from_date: z.string().optional().describe("First day the change applies (YYYY-MM-DD). Default: today (UTC)."),
       },
       annotations: { title: "Update recurring block", destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -1404,11 +1452,12 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "create_task_header",
     {
-      description: "Create a new task header (section separator). To show it on a tag page, insert \"h:<header_id>\" into that tag's tasks_order (get_tag, then update_tag) where the section should start: the tasks listed after it belong to that section.",
+      description: "Create a new task header (section separator). Pass tag_id to add it at the bottom of that tag's page; then create_task with header_id files tasks in it. To place it elsewhere on the page, reorder tasks_order (get_tag, then update_tag): the tasks listed after \"h:<header_id>\" belong to that section.",
       inputSchema: {
         name: z.string().describe("Header name"),
         description: z.string().optional().describe("Optional description below the header"),
         collapsed: z.boolean().optional().describe("Whether the section is collapsed (default false)"),
+        tag_id: z.string().uuid().optional().describe("Tag page to add the section to, at the bottom"),
       },
       annotations: { title: "Create task header", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
