@@ -761,7 +761,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     "list_notes",
     {
       description:
-        "List notes. QuickNotes (inbox, not yet archived) and Notes (archived, permanent). Filter by pinned or archived status, by tag (page) with `tag_id`, by the day(s) a note is linked to (`date`, or `date_from`/`date_to`) — e.g. \"what did I note for tomorrow?\" —, or by publication-flow stage with `status` — e.g. \"which notes are waiting for review?\". Each note carries `dates` (the days it is linked to) and `status` (its stage in the publication flow, or null).",
+        "List notes. QuickNotes (inbox, not yet archived) and Notes (archived, permanent). Filter by pinned or archived status, by tag (page) with `tag_id`, by the day(s) a note is linked to (`date`, or `date_from`/`date_to`) — e.g. \"what did I note for tomorrow?\" —, by publication-flow stage with `status` — e.g. \"which notes are waiting for review?\" —, or with `scheduled` for notes waiting to be published on a date. Each note carries `dates` (the days it is linked to), `status` (its stage in the publication flow, or null), `published_at` (when it was published on the user's public Page, or null) and `publish_at` (its scheduled publication date, or null).",
       inputSchema: {
         status: z
           .string()
@@ -774,14 +774,15 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         date_to: z.string().optional().describe("Only notes linked to a day on or before this date (YYYY-MM-DD)"),
         company_id: z.string().uuid().optional().describe("Only notes linked directly to this company"),
         tag_id: z.string().uuid().optional().describe("Only notes linked to this tag (page)"),
+        scheduled: z.boolean().optional().describe("true = only notes waiting for their scheduled publication date (`publish_at`), sorted by that date, soonest first — e.g. to find the next free day or count how many days are scheduled ahead; false = notes with no scheduled date"),
         limit: z.number().int().positive().optional().describe("Max results (default 20)"),
         offset: z.number().int().nonnegative().optional().describe("Pagination offset"),
       },
       annotations: { title: "List notes", readOnlyHint: true, openWorldHint: false },
     },
-    async ({ status, pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset }) => {
+    async ({ status, pinned, archived, date, date_from, date_to, company_id, tag_id, scheduled, limit, offset }) => {
       return toContent(
-        await fetchApi(`/notes${qs({ status, pinned, archived, date, date_from, date_to, company_id, tag_id, limit, offset })}`)
+        await fetchApi(`/notes${qs({ status, pinned, archived, date, date_from, date_to, company_id, tag_id, scheduled, limit, offset })}`)
       );
     }
   );
@@ -842,8 +843,12 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .boolean()
           .optional()
           .describe("Create a permanent Note directly instead of an Inbox QuickNote (default: false). Tags, links and @mentions work the same. Implied by status."),
+        publish_at: z
+          .string()
+          .optional()
+          .describe("Schedule the note's publication on the user's public Keepsake Page: an ISO 8601 date-time WITH a time zone (e.g. \"2026-11-20T05:00:00Z\"). At that time Keepsake publishes it by itself, exactly like the Publish button: Page, RSS feed, the next email to the Page's subscribers, and the user's social networks if they turned on automatic sharing. A date in the past publishes it right away. Only when the user asks to publish or schedule — publishing is public. Requires a public profile (username) and an active subscription or trial. The note is created as a permanent Note. If scheduling is refused, the note is still created and the response's `publication` says why."),
       },
-      annotations: { title: "Create note", destructiveHint: false, idempotentHint: false, openWorldHint: false },
+      annotations: { title: "Create note", destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
     async (params) => {
       return toContent(await fetchApi("/notes", "POST", params));
@@ -853,7 +858,7 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
   server.registerTool(
     "update_note",
     {
-      description: "Update an existing QuickNote or Note. `dates` REPLACES the full set of days the note is linked to — the way to move a note to another day (\"not done, push it to tomorrow\"). To add or remove a single day without touching the others, prefer link_note_date / unlink_note_date. `status` moves the note along the publication flow (\"this one is ready\"); setting a stage on an Inbox QuickNote also keeps it as a Note.",
+      description: "Update an existing QuickNote or Note. `publish_at` schedules (or unschedules) its publication on the user's public Page. `dates` REPLACES the full set of days the note is linked to — the way to move a note to another day (\"not done, push it to tomorrow\"). To add or remove a single day without touching the others, prefer link_note_date / unlink_note_date. `status` moves the note along the publication flow (\"this one is ready\"); setting a stage on an Inbox QuickNote also keeps it as a Note.",
       inputSchema: {
         id: z.string().uuid().describe("Note UUID"),
         content: z.string().optional().describe("Updated content"),
@@ -878,8 +883,13 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
           .nullable()
           .optional()
           .describe("Publication-flow stage: name, key or id from list_note_statuses. null takes the note out of the flow."),
+        publish_at: z
+          .string()
+          .nullable()
+          .optional()
+          .describe("Schedule the note's publication on the user's public Keepsake Page: an ISO 8601 date-time WITH a time zone (e.g. \"2026-11-20T05:00:00Z\"). At that time Keepsake publishes it by itself, exactly like the Publish button: Page, RSS feed, the next email to the Page's subscribers, and the user's social networks if they turned on automatic sharing. A date in the past publishes it right away. Only when the user asks to publish or schedule — publishing is public. Requires a public profile (username) and an active subscription or trial. Sending a new date reschedules it; null unschedules it (the note stays where it is, unpublished). Editing a scheduled note's content keeps its date. Has no effect on a note that is already published."),
       },
-      annotations: { title: "Update note", destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: { title: "Update note", destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },
     async ({ id, ...body }) => {
       return toContent(await fetchApi(`/notes/${id}`, "PATCH", body));

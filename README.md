@@ -168,11 +168,11 @@ rather than in the chat, which disappears.
 ### QuickNotes
 | Tool | Description |
 |------|-------------|
-| `list_notes` | List notes — filter by pinned/archived, day, company, page (`tag_id`), publication-flow stage (`status`) |
+| `list_notes` | List notes — filter by pinned/archived, day, company, page (`tag_id`), publication-flow stage (`status`), or notes waiting for their publication date (`scheduled`) |
 | `list_note_statuses` | The stages of the user's publication flow (Idea → In progress → To review → Ready → Published by default — the user can rename, add or remove them) |
 | `get_note` | Get one note by ID with its tags, contacts, tasks and linked notes |
-| `create_note` | Create a note — supports `#tag#` and `[[tag]]` syntax; `archived` creates a permanent Note directly (no Inbox), `status` puts it straight into the publication flow |
-| `update_note` | Update note content, links, days, or its publication-flow stage (`status`) |
+| `create_note` | Create a note — supports `#tag#` and `[[tag]]` syntax; `archived` creates a permanent Note directly (no Inbox), `status` puts it straight into the publication flow, `publish_at` schedules its publication on the user's public Page |
+| `update_note` | Update note content, links, days, its publication-flow stage (`status`), or schedule / unschedule its publication (`publish_at`) |
 | `delete_note` | Soft-delete (or permanent) |
 | `pin_note` | Pin as a post-it (short reference always at hand) |
 | `unpin_note` | Unpin a note (it stays where it is) |
