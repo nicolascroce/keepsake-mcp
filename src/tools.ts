@@ -198,8 +198,16 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
       inputSchema: {
         first_name: z.string().describe("First name"),
         last_name: z.string().optional().describe("Last name (optional)"),
-        email: z.string().optional().describe("Email address"),
-        phone: z.string().optional().describe("Phone number"),
+        email: z.string().optional().describe("Main email address (use `emails` to give several)"),
+        phone: z.string().optional().describe("Main phone number (use `phones` to give several)"),
+        emails: z.array(z.object({
+          value: z.string().describe("Email address"),
+          label: z.enum(["personal", "work", "other"]).nullable().optional().describe("personal, work or other"),
+        })).optional().describe("All of the contact's email addresses, main one first (e.g. personal and work). Replaces the whole list; takes precedence over `email`."),
+        phones: z.array(z.object({
+          value: z.string().describe("Phone number"),
+          label: z.enum(["mobile", "personal", "work", "other"]).nullable().optional().describe("mobile, personal, work or other"),
+        })).optional().describe("All of the contact's phone numbers, main one first. Replaces the whole list; takes precedence over `phone`."),
         job_title: z.string().optional().describe("Job title / profession, e.g. 'Product designer'"),
         address: z.string().optional().describe("Postal address"),
         company: z.string().optional().describe("Company name. Links the contact to that company record (matched by name ignoring case and accents, created if missing). Adds a link, never removes one. The contact's companies are returned in `companies`."),
@@ -221,8 +229,16 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
         id: z.string().uuid().describe("Contact UUID"),
         first_name: z.string().optional().describe("First name"),
         last_name: z.string().optional().describe("Last name"),
-        email: z.string().optional().describe("Email address"),
-        phone: z.string().optional().describe("Phone number"),
+        email: z.string().optional().describe("Main email address only; the other addresses are kept (use `emails` to change the whole list)"),
+        phone: z.string().optional().describe("Main phone number only; the other numbers are kept (use `phones` to change the whole list)"),
+        emails: z.array(z.object({
+          value: z.string().describe("Email address"),
+          label: z.enum(["personal", "work", "other"]).nullable().optional().describe("personal, work or other"),
+        })).optional().describe("All of the contact's email addresses, main one first (e.g. personal and work). Replaces the whole list; takes precedence over `email`."),
+        phones: z.array(z.object({
+          value: z.string().describe("Phone number"),
+          label: z.enum(["mobile", "personal", "work", "other"]).nullable().optional().describe("mobile, personal, work or other"),
+        })).optional().describe("All of the contact's phone numbers, main one first. Replaces the whole list; takes precedence over `phone`."),
         job_title: z.string().nullable().optional().describe("Job title / profession, e.g. 'Product designer'. Set to null to clear."),
         address: z.string().nullable().optional().describe("Postal address. Set to null to clear."),
         company: z.string().optional().describe("Company name. Links the contact to that company record (matched by name ignoring case and accents, created if missing). Adds a link, never removes one. The contact's companies are returned in `companies`."),
@@ -247,6 +263,22 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     },
     async ({ id }) => {
       return toContent(await fetchApi(`/contacts/${id}`, "DELETE"));
+    }
+  );
+
+  server.registerTool(
+    "merge_contacts",
+    {
+      description:
+        "Merge a duplicate contact INTO another one: its entries, tasks, notes, day blocks, companies and tags (pages) move to the target (no duplicates), the target's empty details (email, phone, job title, address, birthday) are filled from it, its notes are appended to the target's, @mentions of its name are rewritten to the target's name, then it is deleted. Use it when two records describe the same person (e.g. two 'Pascale Villières'). Two people can share a name: confirm with your user that it is the same person, and which record to keep.",
+      inputSchema: {
+        source_id: z.string().uuid().describe("UUID of the contact to merge away (it will be deleted)"),
+        target_id: z.string().uuid().describe("UUID of the contact to keep"),
+      },
+      annotations: { title: "Merge contacts", destructiveHint: true, idempotentHint: false, openWorldHint: false },
+    },
+    async ({ source_id, target_id }) => {
+      return toContent(await fetchApi(`/contacts/${source_id}/merge`, "POST", { target_id }));
     }
   );
 

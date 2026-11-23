@@ -117,16 +117,17 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (96)
+## Available tools (97)
 
 ### Contacts
 | Tool | Description |
 |------|-------------|
 | `list_contacts` | List contacts with pagination, sorting, field selection and filters (linked company, has_company, updated_since) |
 | `get_contact` | Get a contact with recent interactions, tags, and stats |
-| `create_contact` | Create a new contact (`company` links it to a company record, created if missing) |
+| `create_contact` | Create a new contact (`company` links it to a company record, created if missing; `emails` / `phones`: several, each labelled personal, work, mobile or other) |
 | `update_contact` | Update contact fields |
 | `delete_contact` | Permanently delete a contact |
+| `merge_contacts` | Merge a duplicate contact into another (entries, tasks, notes, companies, tags, details, notes, @mentions) |
 | `search_contacts` | Accent-insensitive search by name, email, notes, phone and linked company names |
 | `get_contact_timeline` | Unified chronological feed of all items for a contact |
 
