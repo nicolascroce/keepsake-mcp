@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "description": "Connect Claude to Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads. Capture notes, organize tasks, keep track of the people who matter.",
-  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 97 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
+  "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 98 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
     "name": "Nicolas Croce",
     "url": "https://github.com/nicolascroce"
@@ -197,6 +197,10 @@
     {
       "name": "list_day_blocks",
       "description": "List a day's time blocks in timeline order"
+    },
+    {
+      "name": "list_calendar_events",
+      "description": "List the appointments of the user's connected calendars (read-only)"
     },
     {
       "name": "create_day_block",

@@ -8,12 +8,12 @@
     "url": "https://github.com/nicolascroce/keepsake-mcp",
     "source": "github"
   },
-  "version": "1.22.0",
+  "version": "1.23.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "keepsake-mcp",
-      "version": "1.22.0",
+      "version": "1.23.0",
       "transport": {
         "type": "stdio"
       },

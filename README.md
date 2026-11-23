@@ -117,7 +117,7 @@ rather than in the chat, which disappears.
 |--------|-----------|-------------|
 | `review_note` | `note_id` | Act as the editor of a note: read it, judge form and substance, leave anchored remarks in the margin, never rewrite the text |
 
-## Available tools (97)
+## Available tools (98)
 
 ### Contacts
 | Tool | Description |
@@ -202,6 +202,7 @@ Material kept *alongside* a note without entering its text — an idea, a refere
 | Tool | Description |
 |------|-------------|
 | `list_day_blocks` | List a day's time blocks, in timeline order (creates that day's recurring blocks first) |
+| `list_calendar_events` | List the appointments of the calendars connected in Settings → Calendar (Apple iCloud, Google, Outlook…), read-only, in the account's time zone |
 | `create_day_block` | Create a block, auto-placed first-fit (or pinned via anchor_time), with its people and pages (contact_ids, company_ids, tag_ids) |
 | `update_day_block` | Update a block (title, duration, anchor, note, done, people and pages) |
 | `delete_day_block` | Delete a block and prune its timeline ref (on a recurring block: remove it from that day only) |

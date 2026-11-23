@@ -1071,6 +1071,26 @@ export function registerAllTools(server: McpServer, fetchApi: FetchApiFn): void 
     }
   );
 
+  // Calendar appointments (23/11/2026): read-only events of the calendars the
+  // user connected in Settings → Calendar (Apple iCloud, Google, Outlook…).
+  server.registerTool(
+    "list_calendar_events",
+    {
+      description:
+        "List the appointments of the calendars your user connected to Keepsake (Settings → Calendar: Apple iCloud, Google, Outlook… by their secret iCal link). READ-ONLY: Keepsake never writes to these calendars, so you cannot create, move or delete an appointment — tell the user to change it in their calendar app.\n\nIn the Day view, each timed appointment is a FIXED time, like a block with anchor_time: the user's flexible blocks flow around it, and a new block is never placed on top of it. So read the day's appointments before planning a day (see get_agent_instructions, practice 20), and never duplicate an appointment as a block.\n\nEach event: `date` / `start_time` / `end_time` in the account's time zone (HH:MM), `all_day` (then `date` to `end_date`, end excluded), `title`, `location`, `description` (meeting link often there), `calendar` (the calendar's name). meta.calendars lists the connected calendars with their status (an `error` means the link stopped working: suggest re-adding it in Settings → Calendar). An empty list with no calendars means none is connected. Keepsake keeps one week back to two months ahead; calendars are re-read when older than 10 minutes.",
+      inputSchema: {
+        date: z.string().optional().describe("One day (YYYY-MM-DD). Default: today in the account's time zone."),
+        date_from: z.string().optional().describe("Start of a range (YYYY-MM-DD), with date_to; at most 62 days."),
+        date_to: z.string().optional().describe("End of the range (YYYY-MM-DD), included."),
+        refresh: z.boolean().optional().describe("Re-read the calendars now instead of using what is at most 10 minutes old."),
+      },
+      annotations: { title: "List calendar appointments", readOnlyHint: true, openWorldHint: true },
+    },
+    async ({ date, date_from, date_to, refresh }) => {
+      return toContent(await fetchApi(`/calendar-events${qs({ date, date_from, date_to, refresh })}`));
+    }
+  );
+
   // Task block filter (16/11/2026): a task bucket shows every open task that
   // matches its page and due dates — two buckets may show the same task.
   const taskFilterTagSchema = z
