@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepsake",
   "display_name": "Keepsake",
-  "version": "1.23.0",
+  "version": "1.24.0",
   "description": "Connect Claude to Keepsake (keepsake.place), the app where creators and solo entrepreneurs empty their heads. Capture notes, organize tasks, keep track of the people who matter.",
   "long_description": "Keepsake (keepsake.place) is the app where creators and solo entrepreneurs empty their heads: ideas, tasks and the people who matter, together and linked in one place, all the way to publishing. This MCP server connects Claude to your Keepsake. With 98 tools, you can capture and link notes, manage contacts, log interactions (calls, emails, meetings), organize tasks with recurrence and snooze, capture quick notes, set the intention or question of the day, and tag everything with a flexible tagging system. Full CRUD operations with global search across all entities.",
   "author": {
@@ -404,7 +404,7 @@
     },
     {
       "name": "get_agent_instructions",
-      "description": "Get best practices for being an effective Keepsake agent"
+      "description": "Keepsake's usage guide: items, links and conventions"
     },
     {
       "name": "list_note_comments",

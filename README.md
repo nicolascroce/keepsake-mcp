@@ -107,9 +107,10 @@ Add to `.cursor/mcp.json` in your project:
 
 On connection, the server sends MCP `instructions` — injected into the client's system
 prompt. It is the only channel that reaches an agent *before* it goes looking for a
-capability, so it stays short and points at the rest: call `get_agent_instructions` for
-the full doctrine, and put editorial remarks in a note's margin (`create_note_comment`)
-rather than in the chat, which disappears.
+capability, so it stays short and describes rather than commands: what Keepsake is, that
+`get_agent_instructions` returns the full usage guide, and that remarks on a note can be kept
+in its margin (`create_note_comment`). It never asks the agent to call a tool on its own
+(a rule of the Claude connector directory).
 
 ## Prompts (1)
 
@@ -284,7 +285,7 @@ Every write operation (create, update, delete) performed through the API is reco
 
 This means your user can see everything you do. Be transparent and precise. If you make a mistake, let the user know so they can verify in the activity feed.
 
-Call `get_agent_instructions` at the start of each session for the full best practices guide.
+`get_agent_instructions` returns the full usage guide.
 
 ## Environment variables
 
